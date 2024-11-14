@@ -205,3 +205,13 @@ export const classData: ClassInfo[] = [
   { id: 5, class_liter: "9E", curator: "Наталья Борисовна" },
   { id: 6, class_liter: "9F", curator: "Марина Александровна" }
 ];
+
+export interface Student {
+  student_name: string;
+  actual_score: number;
+  teacher_score: number;
+  danger_level: number;
+  delta_percentage: number;
+  class_liter: string;
+  curator_name: string;
+}

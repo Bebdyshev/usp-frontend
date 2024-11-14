@@ -10,6 +10,7 @@ import PageContainer from '@/components/layout/page-container';
 import { useAuth } from '@/hooks/use-auth';
 import { ArrowRight, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { StudentPopup } from './studentPopup';
 
 export default function OverViewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,6 +22,9 @@ export default function OverViewPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const [studentModalOpen, setStudentModalOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null); 
+  const [searchQuery, setSearchQuery] = useState(""); 
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -48,6 +52,17 @@ export default function OverViewPage() {
     }
   };
 
+  const handleStudentClick = (student: any) => {
+    setSelectedStudent(student); 
+    setStudentModalOpen(true); 
+  };
+
+  const handleClosePopup = () => {
+    setSelectedStudent(null);
+    setStudentModalOpen(false);
+  };
+
+
   const handleClassChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClass = event.target.value;
     setSelectedClass(selectedClass);
@@ -61,6 +76,25 @@ export default function OverViewPage() {
       setFilteredStudents(filtered);
     }
   };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value.toLowerCase();
+    setSearchQuery(query);
+  
+    const filtered = students
+      .filter((classObj) => 
+        selectedClass === "Все" || classObj.grade_liter === selectedClass
+      )
+      .map((classObj) => ({
+        ...classObj,
+        class: classObj.class.filter((student) =>
+          student.student_name.toLowerCase().includes(query)
+        ),
+      }))
+      .filter((classObj) => classObj.class.length > 0);
+  
+    setFilteredStudents(filtered);
+  };  
 
   const handleClassOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClass = event.target.value;
@@ -115,7 +149,7 @@ export default function OverViewPage() {
   return (
     <PageContainer scrollable>
       <div className="space-y-2">
-        <Button onClick={handleButtonClick} className="w-full text-xl">
+        <Button onClick={handleButtonClick} className="w-full text-[16px]">
           Добавить оценки
         </Button>
       </div>
@@ -141,6 +175,8 @@ export default function OverViewPage() {
         <input
           className="peer w-full pl-9 pr-9 mb-0 rounded"
           placeholder="Найти студента..."
+          value={searchQuery} // Bind search input
+          onChange={handleSearchChange} // Call handleSearch on input change
           type="search"
         />
         <div className="pointer-events-none absolute inset-y-0 left-0 top-8 flex items-center justify-center pl-3 text-muted-foreground/80 peer-disabled:opacity-50">
@@ -190,14 +226,17 @@ export default function OverViewPage() {
                 </thead>
                 <tbody>
                   {classInfo.class.map((student, index) => {
-                    // Determine row color based on danger level
                     const rowColor =
                       student.danger_level === 3 ? 'bg-red-100' :
                       student.danger_level === 2 ? 'bg-yellow-100' :
-                      'bg-green-100'; // Default color for low danger level
+                      'bg-green-100';
 
                     return (
-                      <tr key={index} className={`border-b ${rowColor}`}>
+                      <tr
+                        key={index}
+                        className={`border-b ${rowColor} cursor-pointer`}
+                        onClick={() => handleStudentClick(student)} // Click to open student popup
+                      >
                         <td className="px-4 py-2 flex justify-center items-center text-[18px]">{index + 1}</td>
                         <td className="px-4 py-2">{student.student_name}</td>
                         <td className="px-4 py-2">{student.actual_score.toFixed(2)}%</td>
@@ -208,12 +247,15 @@ export default function OverViewPage() {
                   })}
                 </tbody>
               </table>
-            </div>          
+            </div>
           ))}
         </div>
       )}
 
-
+      {studentModalOpen && selectedStudent && (
+        <StudentPopup studentData={selectedStudent} onClose={handleClosePopup} />
+      )}
+    
       {isModalOpen && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
@@ -267,8 +309,6 @@ export default function OverViewPage() {
           </motion.div>
         </div>
       )}
-
-
     </PageContainer>
   );
 }
