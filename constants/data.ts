@@ -194,22 +194,33 @@ export const formsData: FormData[] = [
 interface ClassInfo {
   id: number;
   class_liter: string;
+  classNumber: String;
   curator: string;
 }
 
+interface subjectInfo {
+  id: number;
+  classNumber: String;
+  subjects: string[];
+}
+
 export const classData: ClassInfo[] = [
-  { id: 1, class_liter: "9A", curator: "Татьяна Викторовна" },
-  { id: 2, class_liter: "9B", curator: "Ирина Сергеевна" },
-  { id: 3, class_liter: "9C", curator: "Ольга Викторовна" },
-  { id: 4, class_liter: "9D", curator: "Светлана Николаевна" },
-  { id: 5, class_liter: "9E", curator: "Наталья Борисовна" },
-  { id: 6, class_liter: "9F", curator: "Марина Александровна" }
+  { id: 1, class_liter: "9A", classNumber: "9", curator: "Татьяна Викторовна" },
+  { id: 2, class_liter: "9B", classNumber: "9", curator: "Ирина Сергеевна" },
+  { id: 3, class_liter: "9C", classNumber: "9", curator: "Ольга Викторовна" },
+  { id: 4, class_liter: "9D", classNumber: "9", curator: "Светлана Николаевна" },
+  { id: 5, class_liter: "9E", classNumber: "9", curator: "Наталья Борисовна" },
+  { id: 6, class_liter: "9F", classNumber: "9", curator: "Марина Александровна" }
+];
+
+export const subjectData: subjectInfo[] = [
+  { id: 1, classNumber: "9", subjects: ["Казахский язык и литература", "Русская литература", "Русский язык", "Математика", "Физическая культура", "Искусство", "История Казахстана", "Химия", "Английский язык","Физика", "Биология", "Всемирная история", "География", "Основы права", "Информатика"]},
 ];
 
 export interface Student {
   student_name: string;
-  actual_score: number;
-  teacher_score: number;
+  actual_score: number[];
+  predicted_score: number[];
   danger_level: number;
   delta_percentage: number;
   class_liter: string;

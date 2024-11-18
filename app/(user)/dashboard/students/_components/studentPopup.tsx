@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Student } from '@/constants/data'
-import { AreaGraph } from './area-graph';
+import { AreaChart } from './area-graph';
 
 interface StudentPopupProps {
   studentData: Student;
@@ -10,7 +10,6 @@ interface StudentPopupProps {
 }
 
 export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose }) => {
-    console.log(studentData)
   return (
     <div
       className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
@@ -18,7 +17,7 @@ export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose
       onClick={onClose}
     >
       <motion.div
-        className="bg-white rounded-lg w-[50%] h-[70%] flex flex-col"
+        className="bg-white rounded-lg w-[50%] h-[80%] flex flex-col"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -33,10 +32,15 @@ export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose
                 {studentData.class_liter}
             </p>
         </div>
-        <div className='p-6 pb-2 border-b'>
-            <p className='text-[25px] ml-auto'>
-                {studentData.curator_name}
+        <div className='p-6 pb-2'>
+            <p className='text-[15px] ml-auto'>
+              Куратор: {studentData.curator_name}
             </p>
+            <p className='text-[15px] ml-auto'>
+                add info
+            </p>
+            
+            <AreaChart predicted_scores={studentData.predicted_score.slice(0, 4)} actual_score={studentData.actual_score.slice(0, 4)}/>
         </div>
 
         <div className="mt-auto flex justify-end space-x-2 p-6">

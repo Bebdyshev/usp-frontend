@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { classData } from '@/constants/data';
+import { classData, subjectData } from '@/constants/data';
 import axios from 'axios';
 import PageContainer from '@/components/layout/page-container';
 import { useAuth } from '@/hooks/use-auth';
@@ -14,7 +14,7 @@ import { StudentPopup } from './studentPopup';
 
 export default function OverViewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState("All");
+  const [selectedClass, setSelectedClass] = useState("Все");
   const [selectedOptionClass, setSelectedOptionClass] = useState("9A")
   const [students, setStudents] = useState<any[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
@@ -24,7 +24,10 @@ export default function OverViewPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [studentModalOpen, setStudentModalOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null); 
-  const [searchQuery, setSearchQuery] = useState(""); 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [curator, setCurator] = useState("");
+  const [subject, setSubject] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("Все");
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -52,30 +55,54 @@ export default function OverViewPage() {
     }
   };
 
-  const handleStudentClick = (student: any) => {
+  const handleStudentClick = (student: any, curator: string, subject: string) => {
+    setCurator(curator);
+    setSubject(subject);
     setSelectedStudent(student); 
     setStudentModalOpen(true); 
   };
 
   const handleClosePopup = () => {
+    setCurator("");
+    setSubject("");
     setSelectedStudent(null);
     setStudentModalOpen(false);
   };
 
+  const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedSubject = e.target.value;
+    setSelectedSubject(selectedSubject);
+    console.log(selectedSubject)
 
-  const handleClassChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedClass = event.target.value;
-    setSelectedClass(selectedClass);
-
-    if (selectedClass === "Все") {
-      setFilteredStudents(students);
+    if (selectedSubject === "Все" && selectedClass === "Все") {
+      setFilteredStudents(students); // No filter, show all students
     } else {
-      const filtered = students.filter(
-        (student) => student.grade_liter === selectedClass
-      );
+      const filtered = students.filter((student) => {
+        const isClassMatch = selectedClass === "Все" || student.grade_liter === selectedClass;
+        const isSubjectMatch = selectedSubject === "Все" || student.subject_name === selectedSubject;
+        return isClassMatch && isSubjectMatch;
+      });
       setFilteredStudents(filtered);
     }
   };
+  
+  const handleClassChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedClass = event.target.value;
+    setSelectedClass(selectedClass);
+    console.log(selectedClass)
+
+    if (selectedClass === "Все" && selectedSubject === "Все") {
+      setFilteredStudents(students); // No filter, show all students
+    } else {
+      const filtered = students.filter((student) => {
+        const isClassMatch = selectedClass === "Все" || student.grade_liter === selectedClass;
+        const isSubjectMatch = selectedSubject === "Все" || student.subject_name === selectedSubject;
+        return isClassMatch && isSubjectMatch;
+      });
+      setFilteredStudents(filtered);
+    }
+  };
+  
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value.toLowerCase();
@@ -155,7 +182,7 @@ export default function OverViewPage() {
       </div>
 
       <div className="mt-4 flex space-between">
-        <div className="w-1/5">
+        <div className="w-1/6">
           <label htmlFor="classSelect" className="block mb-2">Выберите класс</label>
           <select
             id="classSelect"
@@ -171,6 +198,23 @@ export default function OverViewPage() {
             ))}
           </select>
         </div>
+        <div className="w-1/6 ml-4">
+          <label htmlFor="subjectSelect" className="block mb-2">Выберите предмет</label>
+          <select
+            id="subjectSelect"
+            value={selectedSubject} 
+            onChange={handleSubjectChange} 
+            className="w-full p-2 border rounded"
+          >
+            <option value="Все">Все</option>
+            {subjectData[0].subjects.map((subject, index) => (
+              <option key={index} value={subject}>
+                {subject}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="w-1/2 ml-auto relative flex flex-col justify-end">
         <input
           className="peer w-full pl-9 pr-9 mb-0 rounded"
@@ -203,58 +247,81 @@ export default function OverViewPage() {
       </div>
 
       {filteredStudents.length > 0 && (
-        <div className="overflow-y-auto mt-6">
-          {filteredStudents.map((classInfo, classIndex) => (
-            <div key={classIndex} className="overflow-hidden rounded-[5px] border border-gray-300 mb-4">
-              <div className='flex p-2 pt-3 border-b'>
-                <h1 className='text-[17px] ml-4'>
-                  Класс: <b>{classInfo.grade_liter}</b>
-                </h1>
-                <h1 className='text-[17px] ml-auto mr-4'>
-                  {classInfo.curator_name}
-                </h1>
-              </div>
-              <table key={classIndex} className="min-w-full table-auto">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 border-b">Rank</th>
-                    <th className="px-4 py-2 border-b">Name</th>
-                    <th className="px-4 py-2 border-b">Score</th>
-                    <th className="px-4 py-2 border-b">Teacher Score</th>
-                    <th className="px-4 py-2 border-b">Danger Level</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classInfo.class.map((student, index) => {
-                    const rowColor =
-                      student.danger_level === 3 ? 'bg-red-100' :
-                      student.danger_level === 2 ? 'bg-yellow-100' :
-                      'bg-green-100';
+  <div className="overflow-y-auto mt-6">
+{filteredStudents.map((classInfo, classIndex) => (
+  <div key={classIndex} className="overflow-hidden rounded-[5px] border border-gray-300 mb-4">
+    <div className='flex p-2 pt-3 border-b'>
+      <h1 className='text-[17px] ml-4'>
+        Класс: <b>{classInfo.grade_liter}</b>
+      </h1>
+      <h1 className='text-[17px] ml-5'>
+        Предмет: <b>{classInfo.subject_name}</b>
+      </h1>
+      <h1 className='text-[17px] ml-auto mr-4'>
+        {classInfo.curator_name}
+      </h1>
+    </div>
+    <table className="min-w-full table-auto">
+      <thead>
+        <tr>
+          <th className="px-4 py-2 border" rowSpan="2">Rank</th>
+          <th className="px-4 py-2 border" rowSpan="2">Name</th>
+          <th className="px-4 py-2 border" colSpan="4">Score</th>
+          <th className="px-4 py-2 border" colSpan="4">Predicted Score</th>
+          <th className="px-4 py-2 border" rowSpan="2">Danger Level</th>
+        </tr>
+        <tr>
+          <th className="px-4 py-1 border border-r">I</th>
+          <th className="px-4 py-1 border border-r">II</th>
+          <th className="px-4 py-1 border border-r">III</th>
+          <th className="px-4 py-1 border border-r">IV</th>
+          <th className="px-4 py-1 border border-r">I</th>
+          <th className="px-4 py-1 border border-r">II</th>
+          <th className="px-4 py-1 border border-r">III</th>
+          <th className="px-4 py-1 border">IV</th>
+        </tr>
+      </thead>
+      <tbody>
+        {classInfo.class.map((student, index) => {
+          const rowColor =
+            student.danger_level === 3 ? 'bg-red-100' :
+            student.danger_level === 2 ? '' :
+            'bg-green-100';
 
-                    return (
-                      <tr
-                        key={index}
-                        className={`border-b ${rowColor} cursor-pointer`}
-                        onClick={() => handleStudentClick(student)} // Click to open student popup
-                      >
-                        <td className="px-4 py-2 flex justify-center items-center text-[18px]">{index + 1}</td>
-                        <td className="px-4 py-2">{student.student_name}</td>
-                        <td className="px-4 py-2">{student.actual_score.toFixed(2)}%</td>
-                        <td className="px-4 py-2">{student.teacher_score.toFixed(2)}%</td>
-                        <td className="px-4 py-2">{student.delta_percentage.toFixed(1)}%</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </div>
-      )}
+          return (
+            <tr
+              key={index}
+              className={`border-b ${rowColor} cursor-pointer`}
+              onClick={() => handleStudentClick(student, classInfo.curator_name, classInfo.subject_name)} // Click to open student popup
+            >
+              <td className="px-4 py-2 flex justify-center items-center text-[18px]">{index + 1}</td>
+              <td className="px-4 py-2">{student.student_name}</td>
+              {student.actual_score.slice(0, 4).map((score, ind) => (
+                <td key={`actual-${ind}`} className="px-4 py-2 text-center">
+                  {score !== 0.0 ? `${score.toFixed(1)}%` : "ND"}
+                </td>
+              ))}
 
-      {studentModalOpen && selectedStudent && (
-        <StudentPopup studentData={selectedStudent} onClose={handleClosePopup} />
-      )}
+              {student.predicted_score.slice(0, 4).map((score, ind) => (
+                <td key={`predicted-${ind}`} className="px-4 py-2 text-center">
+                  {score !== 0.0 ? `${score.toFixed(1)}%` : "ND"}
+                  </td>
+              ))}
+              <td className="px-4 py-2 text-center">{student.delta_percentage.toFixed(1)}%</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+))}
+
+
+    {studentModalOpen && selectedStudent && (
+      <StudentPopup studentData={{ ...selectedStudent, curator_name: curator, subject: subject }} onClose={handleClosePopup} />
+    )}
+  </div>
+)}
     
       {isModalOpen && (
         <div
@@ -299,7 +366,7 @@ export default function OverViewPage() {
             </div>
 
             <div className="mt-auto flex justify-end space-x-2">
-              <Button className="w-full bg-gray-400 hover:bg-[#9ca4ac] w-20" onClick={handleSubmit}>
+              <Button className="w-full bg-gray-400 hover:bg-[#9ca4ac] w-20" onClick={handleModalClose}>
                 Назад
               </Button>
               <Button className="w-full" onClick={handleSubmit}>
