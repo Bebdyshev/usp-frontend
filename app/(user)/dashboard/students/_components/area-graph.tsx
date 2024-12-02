@@ -63,8 +63,8 @@ export function AreaChart({
           grid={{ vertical: true, horizontal: true }}
           xAxis={[{ scaleType: 'point', data: ["I", "II", "III", "IV"] }]}
           series={[
-            { data: real_actual_score, label: "Actual score", area: true,},
-            { data: real_predicted_scores, label: "Predicted score", area: true},
+            { data: real_actual_score, label: "Actual score"},
+            { data: real_predicted_scores, label: "Predicted score"},
           ]}
           width={400}
           height={400}

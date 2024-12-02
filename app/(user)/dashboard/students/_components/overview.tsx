@@ -28,6 +28,26 @@ export default function OverViewPage() {
   const [curator, setCurator] = useState("");
   const [subject, setSubject] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("Все");
+  const [noClassses, setNoClassses] = useState(false);
+  
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (studentModalOpen) {
+          handleClosePopup();
+        }
+        if (isModalOpen) {
+          handleModalClose();
+        }
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+  
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [studentModalOpen, isModalOpen]);  
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -46,10 +66,19 @@ export default function OverViewPage() {
           'Authorization': `Bearer ${token}`,
         },
       });
+      
       setStudents(response.data.class_data);
       setFilteredStudents(response.data.class_data);
+      
     } catch (error) {
-      console.error("Error fetching class data:", error);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        console.log("No classes found. Please check the data source.");
+        setNoClassses(true);
+      } else {
+        console.error("Error fetching class data:", error);
+        alert("An error occurred while fetching class data.");
+      }
+
     } finally {
       setLoading(false);
     }
@@ -151,6 +180,7 @@ export default function OverViewPage() {
     const formData = new FormData();
     formData.append("grade", selectedClass);
     formData.append("curator", classData.find(c => c.class_liter === selectedClass)?.curator || "");
+    formData.append("subject", "Биология");
     formData.append("file", file);
 
     try {
@@ -245,8 +275,14 @@ export default function OverViewPage() {
         </button>
         </div>
       </div>
-
-      {filteredStudents.length > 0 && (
+    {
+      noClassses && (
+        <div className='w-full h-full text-center items-center mt-[250px]'>
+          There is no classes yet!
+        </div>
+      )
+    }
+      {filteredStudents.length > 0 && !noClassses && (
   <div className="overflow-y-auto mt-6">
 {filteredStudents.map((classInfo, classIndex) => (
   <div key={classIndex} className="overflow-hidden rounded-[5px] border border-gray-300 mb-4">
@@ -285,8 +321,9 @@ export default function OverViewPage() {
         {classInfo.class.map((student, index) => {
           const rowColor =
             student.danger_level === 3 ? 'bg-red-100' :
-            student.danger_level === 2 ? '' :
-            'bg-green-100';
+            student.danger_level === 2 ? 'bg-yellow-100' :
+            student.danger_level === 1 ? 'bg-green-100' :
+            '';
 
           return (
             <tr
@@ -322,6 +359,7 @@ export default function OverViewPage() {
     )}
   </div>
 )}
+
     
       {isModalOpen && (
         <div
@@ -339,7 +377,7 @@ export default function OverViewPage() {
           >
             <h2 className="text-lg font-bold mb-4">Отправка файла</h2>
 
-            <div className="mb-4 flex-grow">
+            <div className="mb-4">
               <label htmlFor="classSelect" className="block mb-2">Выберите класс</label>
               <select
                 id="classSelect"
