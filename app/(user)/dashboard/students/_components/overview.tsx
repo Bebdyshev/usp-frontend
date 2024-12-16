@@ -178,8 +178,8 @@ export default function OverViewPage() {
     }
 
     const formData = new FormData();
-    formData.append("grade", selectedClass);
-    formData.append("curator", classData.find(c => c.class_liter === selectedClass)?.curator || "");
+    formData.append("grade", selectedOptionClass);
+    formData.append("curator", classData.find(c => c.class_liter === selectedOptionClass)?.curator || "");
     formData.append("subject", "Биология");
     formData.append("file", file);
 
@@ -202,6 +202,8 @@ export default function OverViewPage() {
   if (authLoading || loading) {
     return <div>Loading...</div>;
   }
+
+  console.log(selectedOptionClass);
 
   return (
     <PageContainer scrollable>
@@ -277,81 +279,83 @@ export default function OverViewPage() {
       </div>
     {
       noClassses && (
-        <div className='w-full h-full text-center items-center mt-[250px]'>
-          There is no classes yet!
+        <div className='w-full h-full text-center items-center mt-[250px] text-gray-500'>
+          Здесь пока нет классов!
         </div>
       )
     }
       {filteredStudents.length > 0 && !noClassses && (
   <div className="overflow-y-auto mt-6">
-{filteredStudents.map((classInfo, classIndex) => (
-  <div key={classIndex} className="overflow-hidden rounded-[5px] border border-gray-300 mb-4">
-    <div className='flex p-2 pt-3 border-b'>
-      <h1 className='text-[17px] ml-4'>
-        Класс: <b>{classInfo.grade_liter}</b>
-      </h1>
-      <h1 className='text-[17px] ml-5'>
-        Предмет: <b>{classInfo.subject_name}</b>
-      </h1>
-      <h1 className='text-[17px] ml-auto mr-4'>
-        {classInfo.curator_name}
-      </h1>
-    </div>
-    <table className="min-w-full table-auto">
-      <thead>
-        <tr>
-          <th className="px-4 py-2 border" rowSpan="2">Rank</th>
-          <th className="px-4 py-2 border" rowSpan="2">Name</th>
-          <th className="px-4 py-2 border" colSpan="4">Score</th>
-          <th className="px-4 py-2 border" colSpan="4">Predicted Score</th>
-          <th className="px-4 py-2 border" rowSpan="2">Danger Level</th>
-        </tr>
-        <tr>
-          <th className="px-4 py-1 border border-r">I</th>
-          <th className="px-4 py-1 border border-r">II</th>
-          <th className="px-4 py-1 border border-r">III</th>
-          <th className="px-4 py-1 border border-r">IV</th>
-          <th className="px-4 py-1 border border-r">I</th>
-          <th className="px-4 py-1 border border-r">II</th>
-          <th className="px-4 py-1 border border-r">III</th>
-          <th className="px-4 py-1 border">IV</th>
-        </tr>
-      </thead>
-      <tbody>
-        {classInfo.class.map((student, index) => {
-          const rowColor =
-            student.danger_level === 3 ? 'bg-red-100' :
-            student.danger_level === 2 ? 'bg-yellow-100' :
-            student.danger_level === 1 ? 'bg-green-100' :
-            '';
+{filteredStudents.length > 0 && !noClassses && (
+  <div className="overflow-y-auto mt-6">
+    {filteredStudents
+      .map((classInfo) => ({
+        ...classInfo,
+        class: classInfo.class.sort((a, b) => b.danger_level - a.danger_level), // Сортировка студентов
+      }))
+      .map((classInfo, classIndex) => (
+        <div key={classIndex} className="overflow-hidden rounded-[5px] border border-gray-300 mb-4">
+          <div className='flex p-2 pt-3 border-b'>
+            <h1 className='text-[17px] ml-4'>
+              Класс: <b>{classInfo.grade_liter}</b>
+            </h1>
+            <h1 className='text-[17px] ml-5'>
+              Предмет: <b>{classInfo.subject_name}</b>
+            </h1>
+            <h1 className='text-[17px] ml-auto mr-4'>
+              {classInfo.curator_name}
+            </h1>
+          </div>
+          <table className="min-w-full table-auto">
+            <thead>
+              <tr>
+                <th className="px-4 py-2 border" rowSpan="2">Rank</th>
+                <th className="px-4 py-2 border" rowSpan="2">Name</th>
+                <th className="px-4 py-2 border" colSpan="4">Score</th>
+                <th className="px-4 py-2 border" colSpan="4">Predicted Score</th>
+                <th className="px-4 py-2 border" rowSpan="2">Danger Level</th>
+              </tr>
+              <tr>
+                <th className="px-4 py-1 border border-r">I</th>
+                <th className="px-4 py-1 border border-r">II</th>
+                <th className="px-4 py-1 border border-r">III</th>
+                <th className="px-4 py-1 border border-r">IV</th>
+                <th className="px-4 py-1 border border-r">I</th>
+                <th className="px-4 py-1 border border-r">II</th>
+                <th className="px-4 py-1 border border-r">III</th>
+                <th className="px-4 py-1 border border-r">IV</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classInfo?.class?.map((student, index) => {
+                console.log(student);
 
-          return (
-            <tr
-              key={index}
-              className={`border-b ${rowColor} cursor-pointer`}
-              onClick={() => handleStudentClick(student, classInfo.curator_name, classInfo.subject_name)} // Click to open student popup
-            >
-              <td className="px-4 py-2 flex justify-center items-center text-[18px]">{index + 1}</td>
-              <td className="px-4 py-2">{student.student_name}</td>
-              {student.actual_score.slice(0, 4).map((score, ind) => (
-                <td key={`actual-${ind}`} className="px-4 py-2 text-center">
-                  {score !== 0.0 ? `${score.toFixed(1)}%` : "ND"}
-                </td>
-              ))}
-
-              {student.predicted_score.slice(0, 4).map((score, ind) => (
-                <td key={`predicted-${ind}`} className="px-4 py-2 text-center">
-                  {score !== 0.0 ? `${score.toFixed(1)}%` : "ND"}
-                  </td>
-              ))}
-              <td className="px-4 py-2 text-center">{student.delta_percentage.toFixed(1)}%</td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+                return (
+                <tr
+                  key={index}
+                  className="hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleStudentClick(student, classInfo.curator_name, classInfo.subject_name)}
+                >
+                  <td className="px-4 py-2 border text-center">{index + 1}</td>
+                  <td className="px-4 py-2 border text-center">{student.student_name}</td>
+                  <td className="px-4 py-2 border text-center">{student.score.I}</td>
+                  <td className="px-4 py-2 border text-center">{student.score.II}</td>
+                  <td className="px-4 py-2 border text-center">{student.score.III}</td>
+                  <td className="px-4 py-2 border text-center">{student.score.IV}</td>
+                  <td className="px-4 py-2 border text-center">{student.predicted_score.I}</td>
+                  <td className="px-4 py-2 border text-center">{student.predicted_score.II}</td>
+                  <td className="px-4 py-2 border text-center">{student.predicted_score.III}</td>
+                  <td className="px-4 py-2 border text-center">{student.predicted_score.IV}</td>
+                  <td className="px-4 py-2 border text-center">{student.danger_level}</td>
+                </tr>
+              )}
+            )}
+            </tbody>
+          </table>
+        </div>
+      ))}
   </div>
-))}
+)}
 
 
     {studentModalOpen && selectedStudent && (
