@@ -338,14 +338,14 @@ export default function OverViewPage() {
                 >
                   <td className="px-4 py-2 border text-center">{index + 1}</td>
                   <td className="px-4 py-2 border text-center">{student.student_name}</td>
-                  <td className="px-4 py-2 border text-center">{student.score.I}</td>
-                  <td className="px-4 py-2 border text-center">{student.score.II}</td>
-                  <td className="px-4 py-2 border text-center">{student.score.III}</td>
-                  <td className="px-4 py-2 border text-center">{student.score.IV}</td>
-                  <td className="px-4 py-2 border text-center">{student.predicted_score.I}</td>
-                  <td className="px-4 py-2 border text-center">{student.predicted_score.II}</td>
-                  <td className="px-4 py-2 border text-center">{student.predicted_score.III}</td>
-                  <td className="px-4 py-2 border text-center">{student.predicted_score.IV}</td>
+                  <td className="px-4 py-2 border text-center">{student.actual_score[0]}</td>
+                  <td className="px-4 py-2 border text-center">{student.actual_score[1]}</td>
+                  <td className="px-4 py-2 border text-center">{student.actual_score[2]}</td>
+                  <td className="px-4 py-2 border text-center">{student.actual_score[3]}</td>
+                  <td className="px-4 py-2 border text-center">{student.predicted_score[0]}</td>
+                  <td className="px-4 py-2 border text-center">{student.predicted_score[1]}</td>
+                  <td className="px-4 py-2 border text-center">{student.predicted_score[2]}</td>
+                  <td className="px-4 py-2 border text-center">{student.predicted_score[3]}</td>
                   <td className="px-4 py-2 border text-center">{student.danger_level}</td>
                 </tr>
               )}
