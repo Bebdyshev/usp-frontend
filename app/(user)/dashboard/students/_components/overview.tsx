@@ -11,6 +11,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { ArrowRight, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { StudentPopup } from './studentPopup';
+import FileUploadModal from './sendForm';
+import ClassTable from './classTable';
 
 export default function OverViewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -294,66 +296,8 @@ export default function OverViewPage() {
         class: classInfo.class.sort((a, b) => b.danger_level - a.danger_level), // Сортировка студентов
       }))
       .map((classInfo, classIndex) => (
-        <div key={classIndex} className="overflow-hidden rounded-[5px] border border-gray-300 mb-4">
-          <div className='flex p-2 pt-3 border-b'>
-            <h1 className='text-[17px] ml-4'>
-              Класс: <b>{classInfo.grade_liter}</b>
-            </h1>
-            <h1 className='text-[17px] ml-5'>
-              Предмет: <b>{classInfo.subject_name}</b>
-            </h1>
-            <h1 className='text-[17px] ml-auto mr-4'>
-              {classInfo.curator_name}
-            </h1>
-          </div>
-          <table className="min-w-full table-auto">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 border" rowSpan="2">Rank</th>
-                <th className="px-4 py-2 border" rowSpan="2">Name</th>
-                <th className="px-4 py-2 border" colSpan="4">Score</th>
-                <th className="px-4 py-2 border" colSpan="4">Predicted Score</th>
-                <th className="px-4 py-2 border" rowSpan="2">Danger Level</th>
-              </tr>
-              <tr>
-                <th className="px-4 py-1 border border-r">I</th>
-                <th className="px-4 py-1 border border-r">II</th>
-                <th className="px-4 py-1 border border-r">III</th>
-                <th className="px-4 py-1 border border-r">IV</th>
-                <th className="px-4 py-1 border border-r">I</th>
-                <th className="px-4 py-1 border border-r">II</th>
-                <th className="px-4 py-1 border border-r">III</th>
-                <th className="px-4 py-1 border border-r">IV</th>
-              </tr>
-            </thead>
-            <tbody>
-              {classInfo?.class?.map((student, index) => {
-                console.log(student);
-
-                return (
-                <tr
-                  key={index}
-                  className="hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleStudentClick(student, classInfo.curator_name, classInfo.subject_name)}
-                >
-                  <td className="px-4 py-2 border text-center">{index + 1}</td>
-                  <td className="px-4 py-2 border text-center">{student.student_name}</td>
-                  <td className="px-4 py-2 border text-center">{student.actual_score[0]}</td>
-                  <td className="px-4 py-2 border text-center">{student.actual_score[1]}</td>
-                  <td className="px-4 py-2 border text-center">{student.actual_score[2]}</td>
-                  <td className="px-4 py-2 border text-center">{student.actual_score[3]}</td>
-                  <td className="px-4 py-2 border text-center">{student.predicted_score[0]}</td>
-                  <td className="px-4 py-2 border text-center">{student.predicted_score[1]}</td>
-                  <td className="px-4 py-2 border text-center">{student.predicted_score[2]}</td>
-                  <td className="px-4 py-2 border text-center">{student.predicted_score[3]}</td>
-                  <td className="px-4 py-2 border text-center">{student.danger_level}</td>
-                </tr>
-              )}
-            )}
-            </tbody>
-          </table>
-        </div>
-      ))}
+        <ClassTable key={classIndex} classInfo={classInfo} handleStudentClick={handleStudentClick} />      
+        ))}
   </div>
 )}
 
@@ -366,57 +310,14 @@ export default function OverViewPage() {
 
     
       {isModalOpen && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
-          style={{ backdropFilter: 'blur(2px)' }}
-          onClick={handleModalClose}
-        >
-          <motion.div
-            className="bg-white p-6 rounded-lg w-[35%] h-[50%] flex flex-col"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-bold mb-4">Отправка файла</h2>
-
-            <div className="mb-4">
-              <label htmlFor="classSelect" className="block mb-2">Выберите класс</label>
-              <select
-                id="classSelect"
-                value={selectedOptionClass}
-                onChange={handleClassOptionChange}
-                className="w-full p-2 border rounded"
-              >
-                {classData.map((classItem) => (
-                  <option key={classItem.id} value={classItem.class_liter}>
-                    {classItem.class_liter}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="fileInput" className="block mb-2">Загрузите Excel файл</label>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept=".xls,.xlsx"
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
-            <div className="mt-auto flex justify-end space-x-2">
-              <Button className="w-full bg-gray-400 hover:bg-[#9ca4ac] w-20" onClick={handleModalClose}>
-                Назад
-              </Button>
-              <Button className="w-full" onClick={handleSubmit}>
-                Сохранить
-              </Button>
-            </div>
-          </motion.div>
-        </div>
+        <FileUploadModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          classData={classData}
+          selectedOptionClass={selectedOptionClass}
+          handleClassOptionChange={handleClassOptionChange}
+          handleSubmit={handleSubmit}
+        />
       )}
     </PageContainer>
   );

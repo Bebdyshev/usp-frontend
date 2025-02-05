@@ -191,7 +191,7 @@ export const formsData: FormData[] = [
   }
 ];
 
-interface ClassInfo {
+export default interface ClassInfo {
   id: number;
   class_liter: string;
   classNumber: String;
