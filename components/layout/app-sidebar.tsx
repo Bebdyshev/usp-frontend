@@ -71,7 +71,7 @@ export default function AppSidebar({
   useEffect(() => {
     async function fetchUserInfo() {
       try {
-        const response = await axiosInstance.get('/users/me'); // Adjust the endpoint as needed
+        const response = await axiosInstance.get('/auth/users/me'); // Adjust the endpoint as needed
         setUserInfo(response.data);
       } catch (error) {
         console.error('Failed to fetch user information:', error);

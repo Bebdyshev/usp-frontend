@@ -69,11 +69,11 @@ const ClassTable: React.FC<ClassTableProps> = ({ classInfo, handleStudentClick }
               key={index}
               className={`hover:bg-gray-100 cursor-pointer ${
                 student.danger_level === 3
-                    ? "bg-red-200 hover:bg-red-200"
+                    ? "bg-red-200 hover:bg-red-100"
                     : student.danger_level === 2
-                    ? "bg-orange-200 hover:bg-orange-200"
+                    ? "bg-orange-200 hover:bg-orange-100"
                     : student.danger_level === 1
-                    ? "bg-yellow-200 hover:bg-yellow-200"
+                    ? "bg-yellow-200 hover:bg-yellow-100"
                     : ""
                 }`}
                 onClick={() =>
@@ -92,7 +92,7 @@ const ClassTable: React.FC<ClassTableProps> = ({ classInfo, handleStudentClick }
                   {score}
                 </td>
               ))}
-              <td className="px-4 py-2 border text-center">{student.danger_level}</td>
+              <td className="px-2 py-2 border text-center">{student.danger_level}</td>
             </tr>
           ))}
         </tbody>

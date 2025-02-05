@@ -63,7 +63,7 @@ export default function OverViewPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://127.0.0.1:8000/get_class', {
+      const response = await axios.get('http://127.0.0.1:8000/grades/get_class', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -187,7 +187,7 @@ export default function OverViewPage() {
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.post('http://127.0.0.1:8000/send/', formData, {
+      const response = await axios.post('http://127.0.0.1:8000/grades/send/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,

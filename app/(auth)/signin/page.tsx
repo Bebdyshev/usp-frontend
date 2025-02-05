@@ -48,11 +48,11 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const resp = await axiosInstance.post("/login", { email: formData.email, password: formData.password });
+      const resp = await axiosInstance.post("/auth/login", { email: formData.email, password: formData.password });
       const token = resp.data.access_token; 
       localStorage.setItem('access_token', token);
       toast("Login successful");
-      router.push("/dashboard/students");
+      router.push("/d/students");
     } catch (err) {
       console.error('Error logging in:', err);
       toast("Login failed");
