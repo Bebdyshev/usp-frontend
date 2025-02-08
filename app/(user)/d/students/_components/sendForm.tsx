@@ -32,12 +32,8 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
       style={{ backdropFilter: "blur(2px)" }}
       onClick={onClose}
     >
-      <motion.div
+      <div
         className="bg-white p-6 rounded-lg w-[35%] h-[50%] flex flex-col"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold mb-4">Отправка файла</h2>
@@ -81,7 +77,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
           </Button>
 
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

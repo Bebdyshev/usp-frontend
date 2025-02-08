@@ -158,7 +158,7 @@ export default function OverViewPage() {
   
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const query = event.target.value.toLowerCase();
+    const query = event.target.value;
     setSearchQuery(query);
   
     const filtered = students
@@ -168,7 +168,7 @@ export default function OverViewPage() {
       .map((classObj) => ({
         ...classObj,
         class: classObj.class.filter((student) =>
-          student.student_name.toLowerCase().includes(query)
+          student.student_name.toLowerCase().includes(query.toLowerCase())
         ),
       }))
       .filter((classObj) => classObj.class.length > 0);

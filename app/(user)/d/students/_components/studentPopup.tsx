@@ -34,12 +34,8 @@ export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose
       style={{ backdropFilter: 'blur(2px)' }}
       onClick={onClose}
     >
-      <motion.div
+      <div
         className="bg-white rounded-lg w-[50%] h-[80%] flex flex-col"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.05 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 pb-2 border-b flex">
@@ -116,7 +112,7 @@ export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose
             Назад
           </Button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
