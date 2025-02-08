@@ -59,8 +59,14 @@ export default function ProfilePage() {
               bullet: { level: 0 },
             }),
             new Paragraph({ text: "" }),
-            // Раздел с дисциплинарными взысканиями
-            new Paragraph({ text: "Наличие дисциплинарных взысканий: Нет" }),
+            new Paragraph({
+                text: "Наличие дисциплинарных взысканий:",
+                heading: HeadingLevel.HEADING_2,
+              }),
+            new Paragraph({
+                text: "Нет",
+                bullet: { level: 0 },
+              }),
           ],
         },
       ],
