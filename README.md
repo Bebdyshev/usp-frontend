@@ -1,18 +1,15 @@
-# CandyData - Freedom Hackathon by Terricon Valley
-
-CandyData - это все-в-одном SaaS рекрутинговая платформа, где всю работу за рекрутера выполняют ИИ-агенты, повышеная эффективность найма без особых усилий.
+# Единый профиль учащигося
 
 ## Installation
 
 Frontend:
 
 ```bash
-cd frontend
-npm install
+npm i
 npm run dev
 ```
 Backend:
-[Backend repository](https://github.com/Kirirto-kun/CandyData_FH_backend)
+[Backend repository](https://github.com/Bebdyshev/usp-backend)
 ```bash
 pip install -r requirements.txt
 uvicorn app:app --reload
