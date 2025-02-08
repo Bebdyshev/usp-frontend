@@ -157,6 +157,7 @@ export default function OverViewPage() {
   const handleClassOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClass = event.target.value;
     setSelectedOptionClass(selectedClass);
+    console.log("selectedOptionClass", selectedOptionClass)
   };
 
   const handleButtonClick = () => {
@@ -167,24 +168,24 @@ export default function OverViewPage() {
     setIsModalOpen(false);
   };
 
-  const handleSubmit = async () => {
-    if (!selectedClass || !fileInputRef.current?.files?.length) {
+  const handleSubmit = async (fileInputRef: React.RefObject<HTMLInputElement>) => {
+    if (!selectedOptionClass || !fileInputRef.current?.files?.length) {
       alert("Please select a class and upload a file.");
       return;
     }
-
+  
     const file = fileInputRef.current.files[0];
     if (!file.name.endsWith(".xls") && !file.name.endsWith(".xlsx")) {
       alert("Please upload a valid Excel file.");
       return;
     }
-
+  
     const formData = new FormData();
     formData.append("grade", selectedOptionClass);
     formData.append("curator", classData.find(c => c.class_liter === selectedOptionClass)?.curator || "");
     formData.append("subject", "Биология");
     formData.append("file", file);
-
+  
     try {
       const token = localStorage.getItem('access_token');
       const response = await axios.post('http://127.0.0.1:8000/grades/send/', formData, {
@@ -200,6 +201,7 @@ export default function OverViewPage() {
       alert("Error submitting file.");
     }
   };
+  
 
   if (authLoading || loading) {
     return <div>Loading...</div>;
@@ -317,7 +319,9 @@ export default function OverViewPage() {
           selectedOptionClass={selectedOptionClass}
           handleClassOptionChange={handleClassOptionChange}
           handleSubmit={handleSubmit}
+          fileInputRef={fileInputRef} // Передаем fileInputRef
         />
+
       )}
     </PageContainer>
   );

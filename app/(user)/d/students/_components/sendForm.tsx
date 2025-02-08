@@ -9,8 +9,10 @@ interface FileUploadModalProps {
   classData: ClassInfo[];
   selectedOptionClass: string;
   handleClassOptionChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleSubmit: () => void;
+  handleSubmit: (fileInputRef: React.RefObject<HTMLInputElement>) => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
 }
+
 
 const FileUploadModal: React.FC<FileUploadModalProps> = ({
   isOpen,
@@ -74,9 +76,10 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
           <Button className="w-20 bg-gray-400 hover:bg-[#9ca4ac]" onClick={onClose}>
             Назад
           </Button>
-          <Button className="w-full" onClick={handleSubmit}>
-            Сохранить
+          <Button onClick={() => handleSubmit(fileInputRef)}>
+            Отправить файл
           </Button>
+
         </div>
       </motion.div>
     </div>
