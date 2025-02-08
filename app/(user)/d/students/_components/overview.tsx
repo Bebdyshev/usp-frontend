@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { StudentPopup } from './studentPopup';
 import FileUploadModal from './sendForm';
 import ClassTable from './classTable';
+import axiosInstance from '@/app/axios/instance';
 
 export default function OverViewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,6 +31,7 @@ export default function OverViewPage() {
   const [curator, setCurator] = useState("");
   const [subject, setSubject] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("Все");
+  const [selectedDangerLevel, setSelectedDangerLevel] = useState("Все");
   const [noClassses, setNoClassses] = useState(false);
   
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function OverViewPage() {
       
       setStudents(response.data.class_data);
       setFilteredStudents(response.data.class_data);
-      
+      console.log(response.data.class_data)
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         console.log("No classes found. Please check the data source.");
@@ -105,7 +107,7 @@ export default function OverViewPage() {
     setSelectedSubject(selectedSubject);
     console.log(selectedSubject)
 
-    if (selectedSubject === "Все" && selectedClass === "Все") {
+    if (selectedClass === "Все" && selectedSubject === "Все" && selectedDangerLevel === "Все") {
       setFilteredStudents(students); // No filter, show all students
     } else {
       const filtered = students.filter((student) => {
@@ -116,13 +118,33 @@ export default function OverViewPage() {
       setFilteredStudents(filtered);
     }
   };
+
+  const handleDangerLevelChange = async (event) => {
+    const selectedDangerLevel = event.target.value;
+    setSelectedDangerLevel(selectedDangerLevel); // Update the selected danger level
+
+    if (selectedDangerLevel === "Все") {
+      setFilteredStudents(students); 
+    } else {
+      try {
+        const response = await axiosInstance.get(`grades/get_students_danger?level=${selectedDangerLevel}`);
+        const data = response.data;
+          
+        setFilteredStudents(data.filtered_class_data); 
+      } catch (error) {
+        console.error("Error fetching students:", error);
+        alert("An error occurred while fetching students with the selected danger level.");
+      }
+    }
+  };
+  
   
   const handleClassChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClass = event.target.value;
     setSelectedClass(selectedClass);
     console.log(selectedClass)
 
-    if (selectedClass === "Все" && selectedSubject === "Все") {
+    if (selectedClass === "Все" && selectedSubject === "Все" && selectedDangerLevel === "Все") {
       setFilteredStudents(students); // No filter, show all students
     } else {
       const filtered = students.filter((student) => {
@@ -218,8 +240,8 @@ export default function OverViewPage() {
       </div>
 
       <div className="mt-4 flex space-between">
-        <div className="w-1/6">
-          <label htmlFor="classSelect" className="block mb-2">Выберите класс</label>
+        <div className="w-[13%]">
+        <label htmlFor="classSelect" className="block mb-2">Выберите класс</label>
           <select
             id="classSelect"
             value={selectedClass}
@@ -234,7 +256,7 @@ export default function OverViewPage() {
             ))}
           </select>
         </div>
-        <div className="w-1/6 ml-4">
+        <div className="w-[13%] ml-4">
           <label htmlFor="subjectSelect" className="block mb-2">Выберите предмет</label>
           <select
             id="subjectSelect"
@@ -251,7 +273,23 @@ export default function OverViewPage() {
           </select>
         </div>
 
-        <div className="w-1/2 ml-auto relative flex flex-col justify-end">
+        <div className="w-[13%] ml-5">
+          <label htmlFor="subjectSelect" className="block mb-2">Выберите уровень</label>
+          <select
+            id="subjectSelect"
+            value={selectedDangerLevel} 
+            onChange={handleDangerLevelChange} 
+            className="w-full p-2 border rounded"
+          >
+            <option value="Все">Все</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            
+          </select>
+        </div>
+
+        <div className="w-1/3 ml-auto relative flex flex-col justify-end">
         <input
           className="peer w-full pl-9 pr-9 mb-0 rounded"
           placeholder="Найти студента..."
