@@ -1,6 +1,18 @@
 'use client';
-import { FC, useMemo } from "react";
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
+
+import { FC, useMemo, useState } from "react";
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface DangerousClass {
   grade: string;
@@ -12,20 +24,19 @@ interface ClassTableProps {
 }
 
 const COLORS = {
-  high: '#FF0000',    // красный для высокого уровня
-  medium: '#FFBB28',  // желтый для среднего
-  low: '#FF8042'      // оранжевый для низкого
+  high: "#FF0000",
+  medium: "#FFBB28",
+  low: "#FF8042",
 };
 
 const ChartContainer: FC<ClassTableProps> = ({ dangerousClasses }) => {
-  const pieData = useMemo(() => {
-    const dangerLevels = {
-      high: 0,
-      medium: 0,
-      low: 0
-    };
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
-    dangerousClasses.forEach(item => {
+  const { totalData } = useMemo(() => {
+    const dangerLevels = { high: 0, medium: 0, low: 0 };
+
+    dangerousClasses.forEach((item) => {
       if (item.avg_danger_level >= 2.5) {
         dangerLevels.high++;
       } else if (item.avg_danger_level >= 1.5) {
@@ -35,63 +46,125 @@ const ChartContainer: FC<ClassTableProps> = ({ dangerousClasses }) => {
       }
     });
 
-    const total = dangerousClasses.length;
-    
-    return [
-      { name: 'Высокий риск', value: (dangerLevels.high / total) * 100 },
-      { name: 'Средний риск', value: (dangerLevels.medium / total) * 100 },
-      { name: 'Низкий риск', value: (dangerLevels.low / total) * 100 }
-    ];
+    return {
+      totalData: {
+        labels: ["Высокий риск", "Средний риск", "Низкий риск"],
+        datasets: [
+          {
+            data: [dangerLevels.high, dangerLevels.medium, dangerLevels.low],
+            backgroundColor: [COLORS.high, COLORS.medium, COLORS.low],
+            hoverBackgroundColor: ["#CC0000", "#E6A800", "#CC6600"],
+            borderWidth: 2,
+          },
+        ],
+      },
+    };
   }, [dangerousClasses]);
 
-  const totalClasses = dangerousClasses.length;
+  const filteredData = useMemo(() => {
+    const filteredClasses = dangerousClasses.filter(
+      (item) =>
+        (!selectedClass || item.grade === selectedClass) &&
+        (selectedLevel === null ||
+          (selectedLevel === 3 && item.avg_danger_level >= 2.5) ||
+          (selectedLevel === 2 && item.avg_danger_level >= 1.5 && item.avg_danger_level < 2.5) ||
+          (selectedLevel === 1 && item.avg_danger_level < 1.5))
+    );
+
+    return {
+      labels: filteredClasses.map((item) => item.grade),
+      datasets: [
+        {
+          data: filteredClasses.map(() => 1),
+          backgroundColor: filteredClasses.map((item) =>
+            item.avg_danger_level >= 2.5
+              ? COLORS.high
+              : item.avg_danger_level >= 1.5
+              ? COLORS.medium
+              : COLORS.low
+          ),
+          borderWidth: 2,
+        },
+      ],
+    };
+  }, [dangerousClasses, selectedClass, selectedLevel]);
 
   return (
-    <div className="w-full h-full border-collapse rounded-lg overflow-hidden">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={pieData}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={80}
-            paddingAngle={5}
-            dataKey="value"
-          >
-            {pieData.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={Object.values(COLORS)[index]} 
-                strokeWidth={2}
-              />
+    <div className="h-full flex flex-col justify-between">
+      <div className="flex justify-center gap-2">
+        <Select onValueChange={setSelectedClass} value={selectedClass ?? undefined}>
+          <SelectTrigger>
+            <SelectValue placeholder="Все классы" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Все классы</SelectItem>
+            {dangerousClasses.map((item) => (
+              <SelectItem key={item.grade} value={item.grade}>{item.grade}</SelectItem>
             ))}
-          </Pie>
-          <Legend />
-          {/* Центральный текст */}
-          <text
-            x="50%"
-            y="50%"
-            textAnchor="middle"
-            dominantBaseline="middle"
-          >
-            <tspan
-              x="50%"
-              y="45%"
-              className="fill-foreground text-2xl font-bold"
-            >
-              {totalClasses}
-            </tspan>
-            <tspan
-              x="50%"
-              y="65%"
-              className="fill-muted-foreground text-sm"
-            >
-              Классов
-            </tspan>
-          </text>
-        </PieChart>
-      </ResponsiveContainer>
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={(value) => setSelectedLevel(value ? Number(value) : null)} value={selectedLevel?.toString() ?? undefined}>
+          <SelectTrigger>
+            <SelectValue placeholder="Все уровни" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="3">Высокий риск</SelectItem>
+            <SelectItem value="2">Средний риск</SelectItem>
+            <SelectItem value="1">Низкий риск</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-row gap-4 h-full mt-4">
+        <Card className="flex-1">
+          <CardHeader className="items-center">
+            <CardTitle>Распределение внутри категории</CardTitle>
+            <CardDescription>Фильтрованный список классов</CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center h-[calc(100%-130px)]">
+            {filteredData.labels.length > 0 ? (
+              <div className="w-full h-full max-w-[300px] flex justify-center items-center">
+                <Pie
+                  data={filteredData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Нет данных</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="flex-1">
+          <CardHeader className="items-center">
+            <CardTitle>Общее распределение рисков</CardTitle>
+            <CardDescription>Все классы по уровням риска</CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center h-[calc(100%-130px)]">
+            <div className="w-full h-full max-w-[300px] flex justify-center items-center">
+              <Pie
+                data={totalData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: true,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    },
+                  },
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
