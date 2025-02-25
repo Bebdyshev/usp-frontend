@@ -10,6 +10,9 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import axiosInstance from "@/app/axios/instance";
+import TableContainer from './table';
+import ChartContainer from './piechart';
+
 export default function DashBoardPage() {
   const [dangerLevels, setDangerLevels] = useState({
     level3: 0,
@@ -19,13 +22,11 @@ export default function DashBoardPage() {
   const [dangerousClasses, setDangerousClasses] = useState([]);
 
   useEffect(() => {
-    // Fetch danger level stats and dangerous classes on component mount
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get('dashboard/danger-levels');
         const data = response.data;
 
-        // Set danger level stats and dangerous classes in state
         setDangerLevels({
           level3: data.danger_level_stats[3]?.student_count || 0,
           level2: data.danger_level_stats[2]?.student_count || 0,
@@ -44,7 +45,6 @@ export default function DashBoardPage() {
   return (
     <PageContainer scrollable>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
-        {/* Danger Levels Cards */}
         <Card className="hover:border-red-500 group transition duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium group-hover:text-red-500 transition duration-300">
@@ -105,27 +105,13 @@ export default function DashBoardPage() {
         </Card>
       </div>
 
-      {/* Compact Dangerous Classes Table */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="col-span-8 w-full">
-          <h2 className="text-lg font-semibold mb-4">Топ опасных классов</h2>
-          <table className="min-w-full text-sm border-collapse">
-            <thead>
-              <tr>
-                <th className="px-3 py-2 text-left border-b">Класс</th>
-                <th className="px-3 py-2 text-left border-b">Уровень опасности</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dangerousClasses.map((classData, index) => (
-                <tr key={index} className="hover:bg-gray-100">
-                  <td className="px-3 py-1 border-b">{classData.grade}</td>
-                  <td className="px-3 py-1 border-b">{classData.avg_danger_level}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="flex gap-4 mt-4 h-[50%]">
+        <Card className="w-[67%]">
+          <ChartContainer dangerousClasses={dangerousClasses} />
+        </Card>
+        <Card className="w-[33%]">
+        <TableContainer dangerousClasses={dangerousClasses} />
+        </Card>
       </div>
     </PageContainer>
   );
