@@ -19,152 +19,173 @@ interface DangerousClass {
   avg_danger_level: number;
 }
 
-interface ClassTableProps {
-  dangerousClasses: DangerousClass[];
+interface ClassDangerPercentage {
+  grade: string;
+  "1": number;
+  "2": number;
+  "3": number;
+  total: number;
 }
 
-const COLORS = {
-  high: "#FF0000",
-  medium: "#FFBB28",
-  low: "#FF8042",
-};
+interface ClassTableProps {
+  dangerousClasses: DangerousClass[];
+  classDangerPercentages?: ClassDangerPercentage[];
+}
 
-const ChartContainer: FC<ClassTableProps> = ({ dangerousClasses }) => {
-  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+const COLORS = [
+  "#FF0000", "#FFBB28", "#FF8042", "#0088FE", "#00C49F", "#FF69B4", "#A569BD", "#C0C0C0", "#40E0D0", "#FFD700"
+];
 
-  const { totalData } = useMemo(() => {
-    const dangerLevels = { high: 0, medium: 0, low: 0 };
+const getColor = (index: number) => COLORS[index % COLORS.length];
 
-    dangerousClasses.forEach((item) => {
-      if (item.avg_danger_level >= 2.5) {
-        dangerLevels.high++;
-      } else if (item.avg_danger_level >= 1.5) {
-        dangerLevels.medium++;
-      } else {
-        dangerLevels.low++;
+const ChartContainer: FC<ClassTableProps> = ({ dangerousClasses, classDangerPercentages = [] }) => {
+  const [selectedGradeNumber, setSelectedGradeNumber] = useState<string | null>(null);
+  const [selectedDangerLevel, setSelectedDangerLevel] = useState<string>("all");
+
+  const gradeNumbers = useMemo(() => {
+    if (!classDangerPercentages.length) return [];
+    
+    const gradeSet = new Set<string>();
+    
+    classDangerPercentages.forEach(item => {
+      const match = item.grade.match(/^\d+/);
+      if (match) {
+        gradeSet.add(match[0]);
       }
     });
+    
+    return Array.from(gradeSet).sort((a, b) => Number(a) - Number(b));
+  }, [classDangerPercentages]);
 
-    return {
-      totalData: {
-        labels: ["Высокий риск", "Средний риск", "Низкий риск"],
-        datasets: [
-          {
-            data: [dangerLevels.high, dangerLevels.medium, dangerLevels.low],
-            backgroundColor: [COLORS.high, COLORS.medium, COLORS.low],
-            hoverBackgroundColor: ["#CC0000", "#E6A800", "#CC6600"],
-            borderWidth: 2,
-          },
-        ],
-      },
-    };
-  }, [dangerousClasses]);
+  const chartData = useMemo(() => {
+    if (!classDangerPercentages.length) return null;
 
-  const filteredData = useMemo(() => {
-    const filteredClasses = dangerousClasses.filter(
-      (item) =>
-        (!selectedClass || item.grade === selectedClass) &&
-        (selectedLevel === null ||
-          (selectedLevel === 3 && item.avg_danger_level >= 2.5) ||
-          (selectedLevel === 2 && item.avg_danger_level >= 1.5 && item.avg_danger_level < 2.5) ||
-          (selectedLevel === 1 && item.avg_danger_level < 1.5))
-    );
-
-    return {
-      labels: filteredClasses.map((item) => item.grade),
-      datasets: [
-        {
-          data: filteredClasses.map(() => 1),
-          backgroundColor: filteredClasses.map((item) =>
-            item.avg_danger_level >= 2.5
-              ? COLORS.high
-              : item.avg_danger_level >= 1.5
-              ? COLORS.medium
-              : COLORS.low
-          ),
+    let filteredClasses = selectedGradeNumber 
+      ? classDangerPercentages.filter(item => item.grade.startsWith(selectedGradeNumber))
+      : classDangerPercentages;
+    
+    filteredClasses = filteredClasses.sort((a, b) => a.grade.localeCompare(b.grade));
+    
+    if (selectedDangerLevel === "all") {
+      return {
+        labels: filteredClasses.map(item => item.grade),
+        datasets: [{
+          data: filteredClasses.map(item => item.total),
+          backgroundColor: filteredClasses.map((_, index) => getColor(index)),
           borderWidth: 2,
-        },
-      ],
-    };
-  }, [dangerousClasses, selectedClass, selectedLevel]);
+        }],
+      };
+    } else {
+      const dangerLevel = parseInt(selectedDangerLevel);
+      return {
+        labels: filteredClasses.map(item => item.grade),
+        datasets: [{
+          data: filteredClasses.map(item => item[dangerLevel.toString() as keyof typeof item] as number),
+          backgroundColor: filteredClasses.map((_, index) => getColor(index)),
+          borderWidth: 2,
+        }],
+      };
+    }
+  }, [classDangerPercentages, selectedGradeNumber, selectedDangerLevel]);
+
+  const chartTitle = useMemo(() => {
+    if (selectedDangerLevel === "all") {
+      return "Общий процент опасности";
+    } else {
+      const level = selectedDangerLevel === "3" ? "высокого" : 
+                    selectedDangerLevel === "2" ? "среднего" : "низкого";
+      return `Процент ${level} уровня опасности`;
+    }
+  }, [selectedDangerLevel]);
+
+  console.log(selectedGradeNumber);
+  const chartDescription = useMemo(() => {
+    if (selectedGradeNumber) {
+      return `${selectedGradeNumber} параллель`;
+    }
+    return "Все классы";
+  }, [selectedGradeNumber]);
 
   return (
-    <div className="h-full flex flex-col justify-between">
-      <div className="flex justify-center gap-2">
-        <Select onValueChange={setSelectedClass} value={selectedClass ?? undefined}>
-          <SelectTrigger>
-            <SelectValue placeholder="Все классы" />
+    <div className="h-full flex flex-col">
+      <div className="flex justify-center gap-4 mb-4">
+        <Select 
+          onValueChange={(value) => {
+            console.log("Selected value:", value);
+            setSelectedGradeNumber(value === 'all' ? null : value);
+          }} 
+          value={selectedGradeNumber ?? "all"}
+        >
+          <SelectTrigger className="w-[40%]">
+            <SelectValue placeholder="Все параллели" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все классы</SelectItem>
-            {dangerousClasses.map((item) => (
-              <SelectItem key={item.grade} value={item.grade}>{item.grade}</SelectItem>
+            <SelectItem value="all">Все параллели</SelectItem>
+            {gradeNumbers.map((number) => (
+              <SelectItem key={number} value={number}>{number} класс</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => setSelectedLevel(value ? Number(value) : null)} value={selectedLevel?.toString() ?? undefined}>
-          <SelectTrigger>
-            <SelectValue placeholder="Все уровни" />
+        <Select 
+          onValueChange={(value) => setSelectedDangerLevel(value)} 
+          value={selectedDangerLevel}
+        >
+          <SelectTrigger className="w-[40%]">
+            <SelectValue placeholder="Все уровни опасности" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">Общий процент</SelectItem>
             <SelectItem value="3">Высокий риск</SelectItem>
             <SelectItem value="2">Средний риск</SelectItem>
             <SelectItem value="1">Низкий риск</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-row gap-4 h-full mt-4">
-        <Card className="flex-1">
-          <CardHeader className="items-center">
-            <CardTitle>Распределение внутри категории</CardTitle>
-            <CardDescription>Фильтрованный список классов</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center h-[calc(100%-130px)]">
-            {filteredData.labels.length > 0 ? (
-              <div className="w-full h-full max-w-[300px] flex justify-center items-center">
-                <Pie
-                  data={filteredData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                    },
-                  }}
-                />
-              </div>
-            ) : (
-              <p className="text-muted-foreground">Нет данных</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="flex-1">
-          <CardHeader className="items-center">
-            <CardTitle>Общее распределение рисков</CardTitle>
-            <CardDescription>Все классы по уровням риска</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center h-[calc(100%-130px)]">
-            <div className="w-full h-full max-w-[300px] flex justify-center items-center">
+
+      <Card className="flex-1 overflow-hidden">
+        <CardHeader className="items-center pb-2">
+          <CardTitle>{chartTitle}</CardTitle>
+          <CardDescription>{chartDescription}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[calc(100%-80px)]">
+          <div className="w-full h-full flex justify-center items-center">
+            {chartData && chartData.labels.length > 0 ? (
               <Pie
-                data={totalData}
+                data={chartData}
                 options={{
                   responsive: true,
                   maintainAspectRatio: true,
                   plugins: {
                     legend: {
-                      display: false,
+                      display: true,
+                      position: "bottom",
+                      labels: {
+                        boxWidth: 12,
+                        padding: 10,
+                        font: {
+                          size: 11
+                        }
+                      }
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (tooltipItem: any) => {
+                          const label = tooltipItem.label;
+                          const value = tooltipItem.raw;
+                          return `${label}: ${value.toFixed(1)}%`;
+                        },
+                      },
                     },
                   },
                 }}
               />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            ) : (
+              <p className="text-muted-foreground">Нет данных для отображения</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

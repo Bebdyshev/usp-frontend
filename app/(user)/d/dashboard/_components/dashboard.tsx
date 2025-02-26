@@ -20,6 +20,7 @@ export default function DashBoardPage() {
     level1: 0
   });
   const [dangerousClasses, setDangerousClasses] = useState([]);
+  const [classDangerPercentages, setClassDangerPercentages] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +35,15 @@ export default function DashBoardPage() {
         });
 
         setDangerousClasses(data.all_dangerous_classes);
+        
+        try {
+          const piechartResponse = await axiosInstance.get('dashboard/danger-levels-piechart');
+          if (piechartResponse.data && piechartResponse.data.class_danger_percentages) {
+            setClassDangerPercentages(piechartResponse.data.class_danger_percentages);
+          }
+        } catch (piechartError) {
+          console.error('Error fetching piechart data:', piechartError);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -105,12 +115,15 @@ export default function DashBoardPage() {
         </Card>
       </div>
 
-      <div className="flex gap-4 mt-4 h-[60%]">
+      <div className="flex gap-4 mt-4 h-[70%]">
         <div className="w-[70%]">
-          <ChartContainer dangerousClasses={dangerousClasses} />
+          <ChartContainer 
+            dangerousClasses={dangerousClasses} 
+            classDangerPercentages={classDangerPercentages}
+          />
         </div>
         <Card className="w-[30%]">
-        <TableContainer dangerousClasses={dangerousClasses} />
+          <TableContainer dangerousClasses={dangerousClasses} />
         </Card>
       </div>
     </PageContainer>
