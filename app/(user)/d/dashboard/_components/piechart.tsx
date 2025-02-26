@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from 'next/navigation';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -106,6 +107,12 @@ const ChartContainer: FC<ClassTableProps> = ({ dangerousClasses, classDangerPerc
     return "Все классы";
   }, [selectedGradeNumber]);
 
+  const router = useRouter();
+
+  const handleClassClick = (className: string) => {
+    router.push(`/d/class?class=${className}`);
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-center gap-4 mb-4">
@@ -178,6 +185,13 @@ const ChartContainer: FC<ClassTableProps> = ({ dangerousClasses, classDangerPerc
                       },
                     },
                   },
+                  onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                      const index = elements[0].index;
+                      const className = chartData.labels[index];
+                      handleClassClick(className);
+                    }
+                  }
                 }}
               />
             ) : (
