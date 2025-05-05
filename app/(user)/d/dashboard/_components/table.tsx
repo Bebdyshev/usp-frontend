@@ -33,7 +33,7 @@ const TableContainer: FC<ClassTableProps> = ({ dangerousClasses }) => {
                 <td className="px-4 py-2 border">{index+1}</td>
                 <td className="px-4 py-2 border">
                   <Link 
-                    href={`/d/class?class=${item.grade}`} 
+                    href={`/c/class?class=${item.grade.toLowerCase()}`} 
                     className="text-blue-600 hover:underline"
                   >
                     {item.grade}

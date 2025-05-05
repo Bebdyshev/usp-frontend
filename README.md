@@ -2,6 +2,8 @@
 
 ## Installation
 
+### Standard Installation
+
 Frontend:
 
 ```bash
@@ -14,6 +16,23 @@ Backend:
 pip install -r requirements.txt
 uvicorn app:app --reload
 ```
+
+### Docker Installation
+
+This project can also be run using Docker:
+
+1. Build and start the container:
+
+```bash
+# Using docker compose (recommended)
+docker-compose up -d
+
+# Or using Docker directly
+docker build -t usp-frontend .
+docker run -p 3000:3000 usp-frontend
+```
+
+2. Access the application at http://localhost:3000
 
 ## Contributing
 

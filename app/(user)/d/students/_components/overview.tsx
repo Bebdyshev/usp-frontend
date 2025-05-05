@@ -119,7 +119,7 @@ export default function OverViewPage() {
     }
   };
 
-  const handleDangerLevelChange = async (event) => {
+  const handleDangerLevelChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedDangerLevel = event.target.value;
     setSelectedDangerLevel(selectedDangerLevel); // Update the selected danger level
 
@@ -167,7 +167,7 @@ export default function OverViewPage() {
       )
       .map((classObj) => ({
         ...classObj,
-        class: classObj.class.filter((student) =>
+        class: classObj.class.filter((student: any) =>
           student.student_name.toLowerCase().includes(query.toLowerCase())
         ),
       }))
@@ -333,7 +333,7 @@ export default function OverViewPage() {
     {filteredStudents
       .map((classInfo) => ({
         ...classInfo,
-        class: classInfo.class.sort((a, b) => b.danger_level - a.danger_level), // Сортировка студентов
+        class: classInfo.class.sort((a: any, b: any) => b.danger_level - a.danger_level), // Сортировка студентов
       }))
       .map((classInfo, classIndex) => (
         <ClassTable key={classIndex} classInfo={classInfo} handleStudentClick={handleStudentClick} />      

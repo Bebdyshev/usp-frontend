@@ -110,7 +110,7 @@ const ChartContainer: FC<ClassTableProps> = ({ dangerousClasses, classDangerPerc
   const router = useRouter();
 
   const handleClassClick = (className: string) => {
-    router.push(`/d/class?class=${className}`);
+    router.push(`/c/class?class=${className.toLowerCase()}`);
   };
 
   return (
