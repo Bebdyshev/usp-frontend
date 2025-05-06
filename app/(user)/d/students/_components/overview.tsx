@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { classData, subjectData } from '@/constants/data';
@@ -174,11 +174,11 @@ export default function OverViewPage() {
     setFilteredStudents(filtered);
   };  
 
-  const handleClassOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleClassOptionChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClass = event.target.value;
     setSelectedOptionClass(selectedClass);
-    console.log("selectedOptionClass", selectedOptionClass)
-  };
+    console.log("selectedOptionClass", selectedClass);
+  }, []);
 
   const handleButtonClick = () => {
     setIsModalOpen(true);
@@ -202,7 +202,8 @@ export default function OverViewPage() {
   
     const formData = new FormData();
     formData.append("grade", selectedOptionClass);
-    const curatorName = classData?.find(c => c.class_liter === selectedOptionClass)?.curator || "";
+    const foundClass = classData.find(c => c.class_liter === selectedOptionClass);
+    const curatorName = foundClass?.curator || "";
     formData.append("curator", curatorName);
     formData.append("subject", "Биология");
     formData.append("file", file);

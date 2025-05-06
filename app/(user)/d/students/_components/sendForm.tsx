@@ -16,7 +16,7 @@ interface FileUploadModalProps {
 const FileUploadModal: React.FC<FileUploadModalProps> = ({
   isOpen,
   onClose,
-  classData,
+  classData = [],
   selectedOptionClass,
   handleClassOptionChange,
   handleSubmit,
@@ -26,20 +26,21 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([]);
 
   // Получаем уникальные параллели
-  const gradeNumbers = Array.from(new Set(classData.map(item => 
+  const gradeNumbers = Array.from(new Set((classData || []).map(item => 
     item.class_liter.replace(/[^0-9]/g, '')
   ))).sort();
 
   // При изменении параллели обновляем список доступных классов
   useEffect(() => {
-    if (selectedGrade) {
+    if (selectedGrade && classData) {
       const filteredClasses = classData.filter(item => 
         item.class_liter.startsWith(selectedGrade)
       );
       setAvailableClasses(filteredClasses);
       
-      // Если есть классы в этой параллели, выбираем первый по умолчанию
-      if (filteredClasses.length > 0) {
+      // Если есть классы в этой параллели и не выбран класс, выбираем первый по умолчанию
+      // Adding check to only set default class when no class is selected or when grade changes
+      if (filteredClasses.length > 0 && (!selectedOptionClass || !filteredClasses.find(c => c.class_liter === selectedOptionClass))) {
         handleClassOptionChange({
           target: { value: filteredClasses[0].class_liter }
         } as React.ChangeEvent<HTMLSelectElement>);
@@ -47,7 +48,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
     } else {
       setAvailableClasses([]);
     }
-  }, [selectedGrade, classData]);
+  }, [selectedGrade, classData, selectedOptionClass, handleClassOptionChange]);
 
   if (!isOpen) return null;
 
@@ -75,7 +76,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
               className="w-[40%] p-2 border rounded"
             >
               <option value="">Параллель</option>
-              {gradeNumbers.map((grade) => (
+              {gradeNumbers && gradeNumbers.length > 0 && gradeNumbers.map((grade) => (
                 <option key={grade} value={grade}>
                   {grade} класс
                 </option>
@@ -92,7 +93,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
               <option value="">
                 {selectedGrade ? "Выберите класс" : "Выберите параллель"}
               </option>
-              {availableClasses.map((classItem) => (
+              {availableClasses && availableClasses.length > 0 && availableClasses.map((classItem) => (
                 <option key={classItem.id} value={classItem.class_liter}>
                   {classItem.class_liter}
                 </option>
