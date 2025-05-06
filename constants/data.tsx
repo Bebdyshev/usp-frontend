@@ -63,22 +63,14 @@ export const navItems: NavItem[] = [
 
 // Sample class data
 export const classData: ClassInfo[] = [
-  { id: 1, class_liter: '1А', students_count: 25, curator: 'Иванов И.И.' },
-  { id: 2, class_liter: '1Б', students_count: 23, curator: 'Петрова А.В.' },
-  { id: 3, class_liter: '1В', students_count: 24, curator: 'Сидорова Е.П.' },
-  { id: 4, class_liter: '2А', students_count: 27, curator: 'Кузнецова М.А.' },
-  { id: 5, class_liter: '2Б', students_count: 26, curator: 'Новиков Д.С.' },
-  { id: 6, class_liter: '3А', students_count: 28, curator: 'Морозова К.Д.' },
-  { id: 7, class_liter: '3Б', students_count: 25, curator: 'Соколов Г.В.' },
-  { id: 8, class_liter: '4А', students_count: 24, curator: 'Волкова Н.И.' },
-  { id: 9, class_liter: '5А', students_count: 26, curator: 'Зайцев П.А.' },
-  { id: 10, class_liter: '5Б', students_count: 27, curator: 'Миронова Т.С.' },
-  { id: 11, class_liter: '6А', students_count: 25, curator: 'Давыдов А.Н.' },
-  { id: 12, class_liter: '7А', students_count: 23, curator: 'Антонова Ю.В.' },
-  { id: 13, class_liter: '8А', students_count: 22, curator: 'Киселев С.М.' },
-  { id: 14, class_liter: '9А', students_count: 24, curator: 'Смирнова О.Д.' },
-  { id: 15, class_liter: '10А', students_count: 20, curator: 'Гусев В.К.' },
-  { id: 16, class_liter: '11А', students_count: 19, curator: 'Макарова И.Л.' }
+  { id: 1, class_liter: '11A', students_count: 16, curator: 'Макарова И.Л.' },
+  { id: 2, class_liter: '11B', students_count: 16, curator: 'Орлов С.В.' },
+  { id: 3, class_liter: '11C', students_count: 16, curator: 'Козлова Т.М.' },
+  { id: 4, class_liter: '11D', students_count: 16, curator: 'Никитин А.А.' },
+  { id: 5, class_liter: '11E', students_count: 16, curator: 'Соловьева Е.С.' },
+  { id: 6, class_liter: '11F', students_count: 16, curator: 'Лебедев П.К.' },
+  { id: 7, class_liter: '11G', students_count: 16, curator: 'Комарова М.Р.' },
+  { id: 8, class_liter: '11H', students_count: 16, curator: 'Титов Д.И.' }
 ];
 
 // Sample subject data
