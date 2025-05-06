@@ -19,37 +19,37 @@ import { Icons } from '../components/icons';
 export const navItems: NavItem[] = [
   {
     title: 'Главная',
-    url: '/dashboard',
+    url: 'http://localhost:3000/d/dashboard',
     icon: 'dashboard',
     isActive: true
   },
   {
     title: 'Пользователи',
-    url: '/dashboard/users',
+    url: 'http://localhost:3000/d/profile',
     icon: 'users',
     items: [
       {
         title: 'Все пользователи',
-        url: '/dashboard/users/all'
+        url: 'http://localhost:3000/d/profile/'
       },
       {
         title: 'Преподаватели',
-        url: '/dashboard/users/teachers'
+        url: 'http://localhost:3000/d/profile/'
       },
       {
         title: 'Ученики',
-        url: '/dashboard/users/students'
+        url: 'http://localhost:3000/d/profile/'
       }
     ]
   },
   {
-    title: 'Формы',
-    url: '/dashboard/forms',
+    title: 'Студенты',
+    url: 'http://localhost:3000/d/students',
     icon: 'forms'
   },
   {
     title: 'Настройки',
-    url: '/dashboard/settings',
+    url: 'http://localhost:3000/d/settings',
     icon: 'settings'
   }
 ]; 
