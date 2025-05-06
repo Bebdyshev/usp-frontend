@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import ClassInfo from "@/constants/data";
+import { ClassInfo } from "@/constants/data";
 
 interface FileUploadModalProps {
   isOpen: boolean;
@@ -26,9 +26,9 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([]);
 
   // Получаем уникальные параллели
-  const gradeNumbers = [...new Set(classData.map(item => 
+  const gradeNumbers = Array.from(new Set(classData.map(item => 
     item.class_liter.replace(/[^0-9]/g, '')
-  ))].sort();
+  ))).sort();
 
   // При изменении параллели обновляем список доступных классов
   useEffect(() => {

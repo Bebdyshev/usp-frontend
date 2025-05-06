@@ -1,13 +1,8 @@
 import "./css/style.css";
-
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
-import Providers from '@/components/layout/providers';
 import { Toaster } from '@/components/ui/sonner';
-import type { Metadata } from 'next';
-import { Lato } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
-import Header from "@/components/ui/header";
 
 const inter = Inter({
   subsets: ["latin"],

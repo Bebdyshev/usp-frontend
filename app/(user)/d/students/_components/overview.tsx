@@ -3,13 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
 import { classData, subjectData } from '@/constants/data';
 import axios from 'axios';
 import PageContainer from '@/components/layout/page-container';
 import { useAuth } from '@/hooks/use-auth';
 import { ArrowRight, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { StudentPopup } from './studentPopup';
 import FileUploadModal from './sendForm';
 import ClassTable from './classTable';
@@ -204,7 +202,8 @@ export default function OverViewPage() {
   
     const formData = new FormData();
     formData.append("grade", selectedOptionClass);
-    formData.append("curator", classData.find(c => c.class_liter === selectedOptionClass)?.curator || "");
+    const curatorName = classData?.find(c => c.class_liter === selectedOptionClass)?.curator || "";
+    formData.append("curator", curatorName);
     formData.append("subject", "Биология");
     formData.append("file", file);
   
@@ -249,11 +248,11 @@ export default function OverViewPage() {
             className="w-full p-2 border rounded"
           >
             <option value="Все">Все</option>
-            {classData.map((classItem) => (
+            {classData && classData.length > 0 ? classData.map((classItem) => (
               <option key={classItem.id} value={classItem.class_liter}>
                 {classItem.class_liter}
               </option>
-            ))}
+            )) : null}
           </select>
         </div>
         <div className="w-[13%] ml-4">
@@ -265,11 +264,13 @@ export default function OverViewPage() {
             className="w-full p-2 border rounded"
           >
             <option value="Все">Все</option>
-            {subjectData[0].subjects.map((subject, index) => (
-              <option key={index} value={subject}>
-                {subject}
-              </option>
-            ))}
+            {subjectData && subjectData[0] && subjectData[0].subjects ? 
+              subjectData[0].subjects.map((subject, index) => (
+                <option key={index} value={subject}>
+                  {subject}
+                </option>
+              ))
+            : null}
           </select>
         </div>
 
@@ -327,28 +328,28 @@ export default function OverViewPage() {
       )
     }
       {filteredStudents.length > 0 && !noClassses && (
-  <div className="overflow-y-auto mt-6">
-{filteredStudents.length > 0 && !noClassses && (
-  <div className="overflow-y-auto mt-6">
-    {filteredStudents
-      .map((classInfo) => ({
-        ...classInfo,
-        class: classInfo.class.sort((a: any, b: any) => b.danger_level - a.danger_level), // Сортировка студентов
-      }))
-      .map((classInfo, classIndex) => (
-        <ClassTable key={classIndex} classInfo={classInfo} handleStudentClick={handleStudentClick} />      
-        ))}
-  </div>
-)}
+        <div className="overflow-y-auto mt-6">
+          {filteredStudents
+            .map((classInfo) => ({
+              ...classInfo,
+              class: Array.isArray(classInfo.class) 
+                ? classInfo.class.sort((a: any, b: any) => b.danger_level - a.danger_level)
+                : [] // Provide empty array if class is undefined
+            }))
+            .map((classInfo, classIndex) => (
+              <ClassTable 
+                key={classIndex} 
+                classInfo={classInfo} 
+                handleStudentClick={handleStudentClick} 
+              />      
+            ))}
+        </div>
+      )}
 
-
-    {studentModalOpen && selectedStudent && (
-      <StudentPopup studentData={{ ...selectedStudent, curator_name: curator, subject: subject }} onClose={handleClosePopup} />
-    )}
-  </div>
-)}
-
-    
+      {studentModalOpen && selectedStudent && (
+        <StudentPopup studentData={{ ...selectedStudent, curator_name: curator, subject: subject }} onClose={handleClosePopup} />
+      )}
+      
       {isModalOpen && (
         <FileUploadModal
           isOpen={isModalOpen}
@@ -357,9 +358,8 @@ export default function OverViewPage() {
           selectedOptionClass={selectedOptionClass}
           handleClassOptionChange={handleClassOptionChange}
           handleSubmit={handleSubmit}
-          fileInputRef={fileInputRef} // Передаем fileInputRef
+          fileInputRef={fileInputRef}
         />
-
       )}
     </PageContainer>
   );

@@ -9,10 +9,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
@@ -36,24 +33,19 @@ import {
 } from '@/components/ui/sidebar';
 import { navItems } from '@/constants/data';
 import {
-  BadgeCheck,
-  Bell,
   ChevronRight,
   ChevronsUpDown,
-  CreditCard,
   GalleryVerticalEnd,
   LogOut
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Breadcrumbs } from '../breadcrumbs';
 import { Icons } from '../icons';
-import SearchInput from '../search-input';
 import ThemeToggle from './ThemeToggle/theme-toggle';
 import { UserNav } from './user-nav';
-import { useEffect, useState } from 'react';
-import { userAgent } from 'next/server';
 
 export const company = {
   name: 'Acme Inc',
@@ -66,12 +58,12 @@ export default function AppSidebar({
 }: {
   children: React.ReactNode;
 }) {
-  const [userInfo, setUserInfo] = useState<{ company_name: string; name: string}>({"company_name": "Freedom", "name": "Berdyshev Kerey"});
+  const [userInfo, setUserInfo] = useState<{ company_name: string; name: string }>({"company_name": "Freedom", "name": "Berdyshev Kerey"});
 
   useEffect(() => {
     async function fetchUserInfo() {
       try {
-        const response = await axiosInstance.get('/auth/users/me'); // Adjust the endpoint as needed
+        const response = await axiosInstance.get('/auth/users/me');
         setUserInfo(response.data);
       } catch (error) {
         console.error('Failed to fetch user information:', error);
@@ -111,7 +103,12 @@ export default function AppSidebar({
             <SidebarGroupLabel>Функционал</SidebarGroupLabel>
             <SidebarMenu>
               {navItems.map((item) => {
-                const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                // Safe icon handling with type checking
+                const iconKey = item.icon;
+                const IconComponent = iconKey && typeof iconKey === 'string' && iconKey in Icons 
+                  ? Icons[iconKey as keyof typeof Icons] 
+                  : Icons.logo;
+                
                 return item?.items && item?.items?.length > 0 ? (
                   <Collapsible
                     key={item.title}
@@ -125,14 +122,14 @@ export default function AppSidebar({
                           tooltip={item.title}
                           isActive={pathname === item.url}
                         >
-                          {item.icon && <Icon />}
+                          {item.icon && <IconComponent />}
                           <span>{item.title}</span>
                           <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {item.items?.map((subItem) => (
+                          {item.items?.map((subItem: {title: string; url: string}) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton
                                 asChild
@@ -156,7 +153,7 @@ export default function AppSidebar({
                       isActive={pathname === item.url}
                     >
                       <Link href={item.url}>
-                        <Icon />
+                        <IconComponent />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -178,12 +175,11 @@ export default function AppSidebar({
                   >
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
-                        src={ ''}
+                        src={''}
                         alt={''}
                       />
                       <AvatarFallback className="rounded-lg">
-                        <img src={"https://avatar.iran.liara.run/username?username=" + userInfo.name}></img>
-                        {/* ДОБАВИТЬ */}
+                        <img src={"https://avatar.iran.liara.run/username?username=" + userInfo.name} alt={userInfo.name} />
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
@@ -201,7 +197,7 @@ export default function AppSidebar({
                   sideOffset={4}
                 >
                   <DropdownMenuItem>
-                    <LogOut />
+                    <LogOut className="mr-2 size-4" />
                     Выйти
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -219,6 +215,7 @@ export default function AppSidebar({
             <Breadcrumbs />
           </div>
           <div className="flex items-center gap-2 px-4">
+            <ThemeToggle />
             <UserNav />
           </div>
         </header>

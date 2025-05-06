@@ -1,4 +1,4 @@
-import { NavItem } from '@/types';
+import { NavItem } from '../types';
 
 export type User = {
   id: number;
@@ -191,7 +191,7 @@ export const formsData: FormData[] = [
   }
 ];
 
-export default interface ClassInfo {
+export interface ClassInfo {
   id: number;
   class_liter: string;
   classNumber: String;

@@ -2,9 +2,9 @@ export default function Clouds() {
   return (
     <div className="bg-white py-32 sm:py-40">
       <div className="mx-auto max-w-7xl px-8 lg:px-12">
-        <h2 className="text-center text-2xl font-bold text-gray-900">
+        <p className="mx-auto mt-2 text-center text-4xl font-semibold tracking-tight text-gray-950 sm:text-5xl whitespace-nowrap">
           Нас поддерживают
-        </h2>
+        </p>
         <div className="mx-auto mt-12 grid max-w-2xl grid-cols-3 items-center gap-x-12 gap-y-12 sm:max-w-3xl sm:grid-cols-3 sm:gap-x-14 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <img
             alt="Nazarbayev Intellectual Schools"

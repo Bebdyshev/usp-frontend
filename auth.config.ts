@@ -1,4 +1,4 @@
-import { NextAuthConfig } from 'next-auth';
+import type { NextAuthOptions } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GithubProvider from 'next-auth/providers/github';
 
@@ -38,6 +38,6 @@ const authConfig = {
   pages: {
     signIn: '/' //sigin page
   }
-} satisfies NextAuthConfig;
+} satisfies NextAuthOptions;
 
 export default authConfig;
