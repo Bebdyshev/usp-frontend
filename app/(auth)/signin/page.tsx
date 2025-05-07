@@ -51,8 +51,13 @@ export default function SignIn() {
       const resp = await axiosInstance.post("/auth/login", { email: formData.email, password: formData.password });
       const token = resp.data.access_token; 
       localStorage.setItem('access_token', token);
+<<<<<<< Updated upstream
       toast("Login successful");
       router.push("/d/students");
+=======
+      toast.success("Login successful");
+      router.push("/dashboard/home");
+>>>>>>> Stashed changes
     } catch (err) {
       console.error('Error logging in:', err);
       toast("Login failed");

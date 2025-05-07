@@ -16,6 +16,7 @@ import axiosInstance from '@/app/axios/instance';
 export default function OverViewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState("Все");
+  const [selectedGrade, setSelectedGrade] = useState("Все");
   const [selectedOptionClass, setSelectedOptionClass] = useState("9A")
   const [students, setStudents] = useState<any[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
@@ -31,6 +32,8 @@ export default function OverViewPage() {
   const [selectedSubject, setSelectedSubject] = useState("Все");
   const [selectedDangerLevel, setSelectedDangerLevel] = useState("Все");
   const [noClassses, setNoClassses] = useState(false);
+  const [availableClasses, setAvailableClasses] = useState<string[]>([]);
+  const [gradeClasses, setGradeClasses] = useState<{[grade: string]: string[]}>({});
   
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -58,20 +61,48 @@ export default function OverViewPage() {
       router.push('/signin');
     }
   }, [authLoading, isAuthenticated, router]);
+  
+  useEffect(() => {
+    // Extract unique class names from the data
+    if (students && students.length > 0) {
+      const classNames = students.map(item => item.grade_liter);
+      const uniqueClasses = Array.from(new Set(classNames));
+      setAvailableClasses(uniqueClasses);
+      
+      // Group classes by grade
+      const groupedClasses: {[grade: string]: string[]} = {};
+      uniqueClasses.forEach(className => {
+        // Extract the grade number (e.g., "9A" -> "9")
+        const grade = className.match(/^\d+/)?.[0] || '';
+        if (grade) {
+          if (!groupedClasses[grade]) {
+            groupedClasses[grade] = [];
+          }
+          groupedClasses[grade].push(className);
+        }
+      });
+      
+      setGradeClasses(groupedClasses);
+    }
+  }, [students]);
+  
+  useEffect(() => {
+    if (selectedGrade !== "Все") {
+      // If grade is selected but class is set to "All" or is from a different grade
+      const availableClassesForGrade = gradeClasses[selectedGrade] || [];
+      if (selectedClass === "Все" || !availableClassesForGrade.includes(selectedClass)) {
+        setSelectedClass("Все");
+      }
+    }
+  }, [selectedGrade, gradeClasses, selectedClass]);
 
   const fetchClassData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://127.0.0.1:8000/grades/get_class', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.get('/grades/get_class');
       
       setStudents(response.data.class_data);
       setFilteredStudents(response.data.class_data);
-      console.log(response.data.class_data)
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         console.log("No classes found. Please check the data source.");
@@ -80,7 +111,6 @@ export default function OverViewPage() {
         console.error("Error fetching class data:", error);
         alert("An error occurred while fetching class data.");
       }
-
     } finally {
       setLoading(false);
     }
@@ -103,26 +133,16 @@ export default function OverViewPage() {
   const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedSubject = e.target.value;
     setSelectedSubject(selectedSubject);
-    console.log(selectedSubject)
 
-    if (selectedClass === "Все" && selectedSubject === "Все" && selectedDangerLevel === "Все") {
-      setFilteredStudents(students); // No filter, show all students
-    } else {
-      const filtered = students.filter((student) => {
-        const isClassMatch = selectedClass === "Все" || student.grade_liter === selectedClass;
-        const isSubjectMatch = selectedSubject === "Все" || student.subject_name === selectedSubject;
-        return isClassMatch && isSubjectMatch;
-      });
-      setFilteredStudents(filtered);
-    }
+    applyFilters(selectedGrade, selectedClass, selectedSubject, selectedDangerLevel);
   };
 
   const handleDangerLevelChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedDangerLevel = event.target.value;
-    setSelectedDangerLevel(selectedDangerLevel); // Update the selected danger level
+    setSelectedDangerLevel(selectedDangerLevel);
 
     if (selectedDangerLevel === "Все") {
-      setFilteredStudents(students); 
+      applyFilters(selectedGrade, selectedClass, selectedSubject, "Все");
     } else {
       try {
         const response = await axiosInstance.get(`grades/get_students_danger?level=${selectedDangerLevel}`);
@@ -136,33 +156,46 @@ export default function OverViewPage() {
     }
   };
   
+  const handleGradeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newGrade = event.target.value;
+    setSelectedGrade(newGrade);
+    setSelectedClass("Все");
+    
+    applyFilters(newGrade, "Все", selectedSubject, selectedDangerLevel);
+  };
   
   const handleClassChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedClass = event.target.value;
-    setSelectedClass(selectedClass);
-    console.log(selectedClass)
-
-    if (selectedClass === "Все" && selectedSubject === "Все" && selectedDangerLevel === "Все") {
-      setFilteredStudents(students); // No filter, show all students
+    const newClass = event.target.value;
+    setSelectedClass(newClass);
+    
+    applyFilters(selectedGrade, newClass, selectedSubject, selectedDangerLevel);
+  };
+  
+  const applyFilters = (grade: string, className: string, subject: string, dangerLevel: string) => {
+    if (grade === "Все" && className === "Все" && subject === "Все" && dangerLevel === "Все") {
+      setFilteredStudents(students);
     } else {
       const filtered = students.filter((student) => {
-        const isClassMatch = selectedClass === "Все" || student.grade_liter === selectedClass;
-        const isSubjectMatch = selectedSubject === "Все" || student.subject_name === selectedSubject;
-        return isClassMatch && isSubjectMatch;
+        const gradeMatch = grade === "Все" || student.grade_liter.startsWith(grade);
+        const classMatch = className === "Все" || student.grade_liter === className;
+        const subjectMatch = subject === "Все" || student.subject_name === subject;
+        
+        return gradeMatch && classMatch && subjectMatch;
       });
       setFilteredStudents(filtered);
     }
   };
-  
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
     setSearchQuery(query);
   
     const filtered = students
-      .filter((classObj) => 
-        selectedClass === "Все" || classObj.grade_liter === selectedClass
-      )
+      .filter((classObj) => {
+        const gradeMatch = selectedGrade === "Все" || classObj.grade_liter.startsWith(selectedGrade);
+        const classMatch = selectedClass === "Все" || classObj.grade_liter === selectedClass;
+        return gradeMatch && classMatch;
+      })
       .map((classObj) => ({
         ...classObj,
         class: classObj.class.filter((student: any) =>
@@ -177,7 +210,6 @@ export default function OverViewPage() {
   const handleClassOptionChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClass = event.target.value;
     setSelectedOptionClass(selectedClass);
-    console.log("selectedOptionClass", selectedClass);
   }, []);
 
   const handleButtonClick = () => {
@@ -209,11 +241,9 @@ export default function OverViewPage() {
     formData.append("file", file);
   
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.post('http://127.0.0.1:8000/grades/send/', formData, {
+      const response = await axiosInstance.post('/grades/send/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`,
         },
       });
       console.log("File sent successfully:", response.data);
@@ -224,12 +254,16 @@ export default function OverViewPage() {
     }
   };
   
+  useEffect(() => {
+    console.log("class data: ", classData);
+  }, [classData]);
 
   if (authLoading || loading) {
     return <div>Loading...</div>;
   }
 
-  console.log(selectedOptionClass);
+  // Get unique grade numbers
+  const gradeNumbers = Object.keys(gradeClasses).sort((a, b) => parseInt(a) - parseInt(b));
 
   return (
     <PageContainer scrollable>
@@ -240,23 +274,42 @@ export default function OverViewPage() {
       </div>
 
       <div className="mt-4 flex space-between">
-        <div className="w-[13%]">
-        <label htmlFor="classSelect" className="block mb-2">Выберите класс</label>
+        <div className="w-[15%]">
+          <label htmlFor="gradeSelect" className="block mb-2">Выберите параллель</label>
+          <select
+            id="gradeSelect"
+            value={selectedGrade}
+            onChange={handleGradeChange}
+            className="w-full p-2 border rounded"
+          >
+            <option value="Все">Все</option>
+            {gradeNumbers.map((grade) => (
+              <option key={grade} value={grade}>
+                {grade}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="w-[15%] ml-4">
+          <label htmlFor="classSelect" className="block mb-2">Выберите класс</label>
           <select
             id="classSelect"
             value={selectedClass}
             onChange={handleClassChange}
             className="w-full p-2 border rounded"
+            disabled={selectedGrade === "Все"}
           >
             <option value="Все">Все</option>
-            {classData && classData.length > 0 ? classData.map((classItem) => (
-              <option key={classItem.id} value={classItem.class_liter}>
-                {classItem.class_liter}
+            {selectedGrade !== "Все" && gradeClasses[selectedGrade]?.map((className, index) => (
+              <option key={index} value={className}>
+                {className}
               </option>
-            )) : null}
+            ))}
           </select>
         </div>
-        <div className="w-[13%] ml-4">
+        
+        <div className="w-[15%] ml-4">
           <label htmlFor="subjectSelect" className="block mb-2">Выберите предмет</label>
           <select
             id="subjectSelect"
@@ -275,10 +328,10 @@ export default function OverViewPage() {
           </select>
         </div>
 
-        <div className="w-[13%] ml-5">
-          <label htmlFor="subjectSelect" className="block mb-2">Выберите уровень</label>
+        <div className="w-[15%] ml-5">
+          <label htmlFor="dangerLevelSelect" className="block mb-2">Выберите уровень</label>
           <select
-            id="subjectSelect"
+            id="dangerLevelSelect"
             value={selectedDangerLevel} 
             onChange={handleDangerLevelChange} 
             className="w-full p-2 border rounded"
@@ -287,7 +340,6 @@ export default function OverViewPage() {
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
-            
           </select>
         </div>
 
@@ -295,8 +347,8 @@ export default function OverViewPage() {
         <input
           className="peer w-full pl-9 pr-9 mb-0 rounded"
           placeholder="Найти студента..."
-          value={searchQuery} // Bind search input
-          onChange={handleSearchChange} // Call handleSearch on input change
+          value={searchQuery}
+          onChange={handleSearchChange}
           type="search"
         />
         <div className="pointer-events-none absolute inset-y-0 left-0 top-8 flex items-center justify-center pl-3 text-muted-foreground/80 peer-disabled:opacity-50">
@@ -335,7 +387,7 @@ export default function OverViewPage() {
               ...classInfo,
               class: Array.isArray(classInfo.class) 
                 ? classInfo.class.sort((a: any, b: any) => b.danger_level - a.danger_level)
-                : [] // Provide empty array if class is undefined
+                : []
             }))
             .map((classInfo, classIndex) => (
               <ClassTable 

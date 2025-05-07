@@ -26,37 +26,33 @@ import { Icons } from '../components/icons';
 export const navItems: NavItem[] = [
   {
     title: 'Главная',
-    url: 'http://localhost:3000/d/dashboard',
+    url: '/dashboard/home',
     icon: 'dashboard',
     isActive: true
   },
   {
-    title: 'Пользователи',
-    url: 'http://localhost:3000/d/profile',
+    title: 'Управление',
+    url: '',
     icon: 'users',
     items: [
       {
         title: 'Все пользователи',
-        url: 'http://localhost:3000/d/profile/'
+        url: '/dashboard/users/'
       },
       {
-        title: 'Преподаватели',
-        url: 'http://localhost:3000/d/profile/'
+        title: 'Классы',
+        url: '/dashboard/classes/'
       },
-      {
-        title: 'Ученики',
-        url: 'http://localhost:3000/d/profile/'
-      }
     ]
   },
   {
     title: 'Студенты',
-    url: 'http://localhost:3000/d/students',
+    url: '/dashboard/students',
     icon: 'forms'
   },
   {
     title: 'Настройки',
-    url: 'http://localhost:3000/d/settings',
+    url: '/dashboard/settings',
     icon: 'settings'
   }
 ]; 
