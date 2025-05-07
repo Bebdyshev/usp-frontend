@@ -43,7 +43,7 @@ export default function SignIn() {
     setError("");
     
     if (!formData.email || !formData.password) {
-      setError("Email and password are required.");
+      setError("Требуется указать email и пароль.");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function SignIn() {
       const resp = await axiosInstance.post("/auth/login", { email: formData.email, password: formData.password });
       const token = resp.data.access_token; 
       localStorage.setItem('access_token', token);
-      toast.success("Login successful");
+      toast.success("Вход выполнен успешно");
       router.push("/dashboard/home");
     } catch (err) {
       const apiError = handleApiError(err);
@@ -62,7 +62,7 @@ export default function SignIn() {
       
       // Handle specific cases
       if (apiError.status === 401 || apiError.status === 400) {
-        setError("Incorrect email or password. Please try again.");
+        setError("Неверный email или пароль. Пожалуйста, попробуйте еще раз.");
       }
     } finally {
       setLoading(false);
@@ -74,7 +74,7 @@ export default function SignIn() {
     setError("");
 
     if (!formData.email || !formData.password || !formData.company_name) {
-      setError("All fields are required for sign-up.");
+      setError("Для регистрации требуется заполнить все поля.");
       return;
     }
 
@@ -82,7 +82,7 @@ export default function SignIn() {
 
     try {
       const resp = await axiosInstance.post("/signup", formData);
-      toast.success("Sign-up successful, please log in.");
+      toast.success("Регистрация прошла успешно, пожалуйста, войдите в систему.");
       setIsLogin(true); // Redirect to login form after sign-up
     } catch (err) {
       const apiError = handleApiError(err);
@@ -91,7 +91,7 @@ export default function SignIn() {
       
       // Special case for email already in use
       if (apiError.status === 400 && apiError.message.toLowerCase().includes('email')) {
-        setError("An account with this email already exists.");
+        setError("Учетная запись с таким email уже существует.");
       }
     } finally {
       setLoading(false);
@@ -106,7 +106,7 @@ export default function SignIn() {
             <Image
               className="object-cover"
               src="https://i.ibb.co.com/wCbTfHw/preview.png"
-              alt="Green abstract"
+              alt="Абстрактное изображение"
               fill
               style={{ objectFit: "cover" }}
             />
@@ -115,7 +115,7 @@ export default function SignIn() {
           <div className="relative">
             <div className="w-full xl:w-full xl:mx-auto xl:pr-24 xl:max-w-xl">
               <h1 className="flex justify-start text-6xl md:text-6xl text-white font-bold">
-                Unified Student Profile
+                Единый профиль учащегося
               </h1> <br/>
               <div className="flex justify-start md:text-xl text-white">
                   <TypeAnimation
@@ -134,7 +134,7 @@ export default function SignIn() {
         <div className="flex items-center justify-center px-4 py-10 bg-white sm:px-6 lg:px-8 sm:py-16 lg:py-24 h-screen">
           <div className="xl:w-full xl:max-w-sm 2xl:max-w-md xl:mx-auto">
             <h2 className="text-3xl font-bold leading-tight text-black sm:text-4xl">
-              {isLogin ? "Sign in to USP" : "Create an account"}
+              {isLogin ? "Вход в систему" : "Создание аккаунта"}
             </h2>
             <form onSubmit={isLogin ? handleLogin : handleSignUp} className="mt-8 space-y-5">
               {/* Error message container with dynamic height based on error presence */}
@@ -148,7 +148,7 @@ export default function SignIn() {
               
               <div>
                 <label className="text-base font-medium text-gray-900">
-                  Email address
+                  Электронная почта
                 </label>
                 <div className="mt-2.5 relative text-gray-400 focus-within:text-gray-600">
                   <div className={commonStyles.inputIcon}>
@@ -156,7 +156,7 @@ export default function SignIn() {
                   </div>
                   <input
                     type="email"
-                    placeholder="Enter email to get started"
+                    placeholder="Введите электронную почту"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
@@ -167,7 +167,7 @@ export default function SignIn() {
 
               <div>
                 <label className="text-base font-medium text-gray-900">
-                  Password
+                  Пароль
                 </label>
                 <div className="mt-2.5 relative text-gray-400 focus-within:text-gray-600">
                   <div className={commonStyles.inputIcon}>
@@ -175,7 +175,7 @@ export default function SignIn() {
                   </div>
                   <input
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="Введите ваш пароль"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
@@ -187,7 +187,7 @@ export default function SignIn() {
               {!isLogin && (
                 <div>
                   <label className="text-base font-medium text-gray-900">
-                    Company Name
+                    Название организации
                   </label>
                   <div className="mt-2.5 relative text-gray-400 focus-within:text-gray-600">
                     <div className={commonStyles.inputIcon}>
@@ -195,7 +195,7 @@ export default function SignIn() {
                     </div>
                     <input
                       type="text"
-                      placeholder="Enter your company name"
+                      placeholder="Введите название вашей организации"
                       name="company_name"
                       value={formData.company_name}
                       onChange={handleChange}
@@ -207,7 +207,7 @@ export default function SignIn() {
 
               <div>
                 <button type="submit" className={commonStyles.button} disabled={loading}>
-                  {loading ? "Processing..." : isLogin ? "Log in" : "Create account"}
+                  {loading ? "Обработка..." : isLogin ? "Войти" : "Создать аккаунт"}
                 </button>
               </div>
               
@@ -217,7 +217,7 @@ export default function SignIn() {
                   onClick={() => setIsLogin(!isLogin)}
                   className="text-sm text-blue-600 hover:underline"
                 >
-                  {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+                  {isLogin ? "" : "Уже есть аккаунт? Войти"}
                 </button>
               </div>
             </form>

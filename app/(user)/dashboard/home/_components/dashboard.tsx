@@ -116,13 +116,13 @@ export default function DashBoardPage() {
       </div>
 
       <div className="flex gap-4 mt-4 h-[70%]">
-        <div className="w-[70%]">
+        <div className="w-[65%]">
           <ChartContainer 
             dangerousClasses={dangerousClasses} 
             classDangerPercentages={classDangerPercentages}
           />
         </div>
-        <Card className="w-[30%]">
+        <Card className="w-[35%]">
           <TableContainer dangerousClasses={dangerousClasses} />
         </Card>
       </div>

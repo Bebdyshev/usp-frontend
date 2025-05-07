@@ -1,5 +1,4 @@
 'use client'; 
-import { useRouter } from 'next/router';
 
 export default function Header() {
   const handleRedirect = () => {
@@ -7,27 +6,19 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white">
-      <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
-        <div className="flex lg:flex-1 lg:justify-start">
-          <img
-            alt=""
-            src="https://akb.nis.edu.kz/img/ornament.png"
-            className="h-8 w-auto mr-4"
-          />
-          <span className="text-2xl font-semibold tracking-tight text-balance text-gray-900 sm:text-xl">
+    <header className="fixed w-full bg-white/80 backdrop-blur-sm z-50 border-b border-gray-100">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between p-5 lg:px-8">
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-medium text-gray-800">
             Единый профиль учащегося
           </span>
         </div>
-        <div className="flex lg:flex-1 lg:justify-end">
-          <a
-            href="#"
-            className="text-3xl font-semibold tracking-tight text-balance text-gray-900 sm:text-xl"
-            onClick={handleRedirect} // Добавляем обработчик события
-          >
-            Личный кабинет <span aria-hidden="true">&rarr;</span>
-          </a>
-        </div>
+        <button
+          onClick={handleRedirect}
+          className="text-sm font-medium text-gray-800 px-4 py-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-all duration-300 flex items-center gap-2"
+        >
+          Личный кабинет <span aria-hidden="true" className="text-gray-400">→</span>
+        </button>
       </nav>
     </header>
   );
