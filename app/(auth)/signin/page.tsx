@@ -52,8 +52,13 @@ export default function SignIn() {
       const token = resp.data.access_token; 
       localStorage.setItem('access_token', token);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       toast("Login successful");
       router.push("/d/students");
+=======
+      toast.success("Login successful");
+      router.push("/dashboard/home");
+>>>>>>> Stashed changes
 =======
       toast.success("Login successful");
       router.push("/dashboard/home");
