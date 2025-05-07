@@ -14,6 +14,8 @@ import {
 } from "react-icons/fa";
 import Image from "next/image";
 import { TypeAnimation } from "react-type-animation";
+import axios from "axios";
+import { handleApiError } from "@/utils/errorHandler";
 
 const commonStyles = {
   inputIcon: "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none",
@@ -51,22 +53,17 @@ export default function SignIn() {
       const resp = await axiosInstance.post("/auth/login", { email: formData.email, password: formData.password });
       const token = resp.data.access_token; 
       localStorage.setItem('access_token', token);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      toast("Login successful");
-      router.push("/d/students");
-=======
       toast.success("Login successful");
       router.push("/dashboard/home");
->>>>>>> Stashed changes
-=======
-      toast.success("Login successful");
-      router.push("/dashboard/home");
->>>>>>> Stashed changes
     } catch (err) {
-      console.error('Error logging in:', err);
-      toast("Login failed");
-      setError("Login failed");
+      const apiError = handleApiError(err);
+      setError(apiError.message);
+      toast.error(apiError.message);
+      
+      // Handle specific cases
+      if (apiError.status === 401 || apiError.status === 400) {
+        setError("Incorrect email or password. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -85,11 +82,17 @@ export default function SignIn() {
 
     try {
       const resp = await axiosInstance.post("/signup", formData);
-      toast("Sign-up successful, please log in.");
+      toast.success("Sign-up successful, please log in.");
       setIsLogin(true); // Redirect to login form after sign-up
     } catch (err) {
-      console.error('Error signing up:', err);
-      setError("Sign-up failed.");
+      const apiError = handleApiError(err);
+      setError(apiError.message);
+      toast.error(apiError.message);
+      
+      // Special case for email already in use
+      if (apiError.status === 400 && apiError.message.toLowerCase().includes('email')) {
+        setError("An account with this email already exists.");
+      }
     } finally {
       setLoading(false);
     }
@@ -131,10 +134,18 @@ export default function SignIn() {
         <div className="flex items-center justify-center px-4 py-10 bg-white sm:px-6 lg:px-8 sm:py-16 lg:py-24 h-screen">
           <div className="xl:w-full xl:max-w-sm 2xl:max-w-md xl:mx-auto">
             <h2 className="text-3xl font-bold leading-tight text-black sm:text-4xl">
-              Sign in to USP
+              {isLogin ? "Sign in to USP" : "Create an account"}
             </h2>
             <form onSubmit={isLogin ? handleLogin : handleSignUp} className="mt-8 space-y-5">
-              {error && <p className="text-red-500">{error}</p>}
+              {/* Error message container with dynamic height based on error presence */}
+              <div className={`transition-all duration-300 overflow-hidden ${error ? 'h-[60px] mb-4' : 'h-0 m-0'}`}>
+                {error && (
+                  <p className="text-red-500 p-3 bg-red-50 rounded-md border border-red-200">
+                    {error}
+                  </p>
+                )}
+              </div>
+              
               <div>
                 <label className="text-base font-medium text-gray-900">
                   Email address
@@ -173,9 +184,40 @@ export default function SignIn() {
                 </div>
               </div>
 
+              {!isLogin && (
+                <div>
+                  <label className="text-base font-medium text-gray-900">
+                    Company Name
+                  </label>
+                  <div className="mt-2.5 relative text-gray-400 focus-within:text-gray-600">
+                    <div className={commonStyles.inputIcon}>
+                      <FaUser className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter your company name"
+                      name="company_name"
+                      value={formData.company_name}
+                      onChange={handleChange}
+                      className={commonStyles.input}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
                 <button type="submit" className={commonStyles.button} disabled={loading}>
                   {loading ? "Processing..." : isLogin ? "Log in" : "Create account"}
+                </button>
+              </div>
+              
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
                 </button>
               </div>
             </form>

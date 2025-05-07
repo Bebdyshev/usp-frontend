@@ -50,7 +50,7 @@ export default function ClassManagementPage() {
     parallel: '',
     curatorName: 'Неизвестный куратор',
     shanyrak: '',
-    studentCount: 0,
+    studentCount: 0
   });
 
   useEffect(() => {
@@ -73,10 +73,13 @@ export default function ClassManagementPage() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === 'studentCount') {
-      const numValue = value === '' ? 0 : Math.max(0, parseInt(value));
-      setFormData(prev => ({ ...prev, [name]: numValue }));
+    const { name, value, type } = e.target;
+    
+    if (type === 'number') {
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value === '' ? 0 : parseInt(value, 10) 
+      }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -88,7 +91,7 @@ export default function ClassManagementPage() {
       parallel: '',
       curatorName: 'Неизвестный куратор',
       shanyrak: '',
-      studentCount: 0,
+      studentCount: 0
     });
     setCurrentGrade(null);
   };
@@ -113,7 +116,7 @@ export default function ClassManagementPage() {
       parallel: grade.parallel || '',
       curatorName: grade.curatorName || 'Неизвестный куратор',
       shanyrak: grade.shanyrak || '',
-      studentCount: grade.studentCount || 0,
+      studentCount: grade.studentCount || 0
     });
     setIsEditDialogOpen(true);
   };
@@ -203,7 +206,7 @@ export default function ClassManagementPage() {
                       <th className="p-3 border-b border-gray-200 font-semibold">Параллель</th>
                       <th className="p-3 border-b border-gray-200 font-semibold">Куратор</th>
                       <th className="p-3 border-b border-gray-200 font-semibold">Шанырак</th>
-                      <th className="p-3 border-b border-gray-200 font-semibold">Студенты</th>
+                      <th className="p-3 border-b border-gray-200 font-semibold">Кол-во учеников</th>
                       <th className="p-3 border-b border-gray-200 font-semibold text-right">Действия</th>
                     </tr>
                   </thead>
@@ -297,16 +300,14 @@ export default function ClassManagementPage() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="studentCount">Количество студентов</Label>
+                <Label htmlFor="studentCount">Количество учеников</Label>
                 <Input
                   id="studentCount"
-                  name="studentCount"   
+                  name="studentCount"
                   type="number"
-                  min="0"
-                  placeholder="например, 25"
-                  value={formData.studentCount}
+                  placeholder="0"
+                  value={formData.studentCount?.toString() || "0"}
                   onChange={handleInputChange}
-                  className="w-full"
                 />
               </div>
             </div>
@@ -371,15 +372,13 @@ export default function ClassManagementPage() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-studentCount">Количество студентов</Label>
+                <Label htmlFor="edit-studentCount">Количество учеников</Label>
                 <Input
                   id="edit-studentCount"
                   name="studentCount"
                   type="number"
-                  min="0"
-                  value={formData.studentCount}
+                  value={formData.studentCount?.toString() || "0"}
                   onChange={handleInputChange}
-                  className="w-full"
                 />
               </div>
             </div>
