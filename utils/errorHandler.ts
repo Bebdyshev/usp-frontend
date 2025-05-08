@@ -7,12 +7,17 @@ export interface ApiError {
   isApiError: boolean;
 }
 
+interface ApiErrorResponse {
+  detail?: string;
+  message?: string;
+}
+
 /**
  * Handles API errors and returns a standardized error object
  */
 export function handleApiError(error: unknown): ApiError {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError;
+    const axiosError = error as AxiosError<ApiErrorResponse>;
     const status = axiosError.response?.status || 500;
     
     // Get error message from response if available
