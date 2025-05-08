@@ -119,7 +119,25 @@ export default function OverViewPage() {
   const handleStudentClick = (student: any, curator: string, subject: string) => {
     setCurator(curator);
     setSubject(subject);
-    setSelectedStudent(student); 
+    
+    // Add default values for the new fields if they don't exist
+    const enhancedStudent = {
+      ...student,
+      curator_name: curator,
+      subject,
+      teacher_comment: student.teacher_comment || '',
+      student_comment: student.student_comment || '',
+      parent_comment: student.parent_comment || '',
+      comments_read: student.comments_read || {
+        student_read: false,
+        parent_read: false
+      },
+      teacher_report: student.teacher_report || '',
+      teacher_recommendations: student.teacher_recommendations || [],
+      has_new_comments: student.has_new_comments || false
+    };
+    
+    setSelectedStudent(enhancedStudent);
     setStudentModalOpen(true); 
   };
 
@@ -128,6 +146,83 @@ export default function OverViewPage() {
     setSubject("");
     setSelectedStudent(null);
     setStudentModalOpen(false);
+  };
+
+  const handleSaveStudentData = (updatedData: any) => {
+    try {
+      // Make a deep copy of the current filtered students to avoid reference issues
+      const updatedFilteredStudents = JSON.parse(JSON.stringify(filteredStudents));
+      const updatedStudentsArray = JSON.parse(JSON.stringify(students));
+      
+      // Find the specific class and student to update in filtered students
+      let studentUpdated = false;
+      for (let i = 0; i < updatedFilteredStudents.length; i++) {
+        const classInfo = updatedFilteredStudents[i];
+        if (classInfo.grade_liter === updatedData.class_liter && 
+            classInfo.subject_name === updatedData.subject) {
+          for (let j = 0; j < classInfo.class.length; j++) {
+            if (classInfo.class[j].student_name === updatedData.student_name) {
+              // Update the student data
+              classInfo.class[j] = {
+                ...classInfo.class[j],
+                teacher_comment: updatedData.teacher_comment,
+                student_comment: updatedData.student_comment,
+                parent_comment: updatedData.parent_comment,
+                comments_read: updatedData.comments_read,
+                teacher_report: updatedData.teacher_report,
+                teacher_recommendations: updatedData.teacher_recommendations,
+                has_new_comments: updatedData.has_new_comments
+              };
+              studentUpdated = true;
+              break;
+            }
+          }
+          if (studentUpdated) break;
+        }
+      }
+      
+      // Similarly update the main students array
+      studentUpdated = false;
+      for (let i = 0; i < updatedStudentsArray.length; i++) {
+        const classInfo = updatedStudentsArray[i];
+        if (classInfo.grade_liter === updatedData.class_liter && 
+            classInfo.subject_name === updatedData.subject) {
+          for (let j = 0; j < classInfo.class.length; j++) {
+            if (classInfo.class[j].student_name === updatedData.student_name) {
+              // Update the student data
+              classInfo.class[j] = {
+                ...classInfo.class[j],
+                teacher_comment: updatedData.teacher_comment,
+                student_comment: updatedData.student_comment,
+                parent_comment: updatedData.parent_comment,
+                comments_read: updatedData.comments_read,
+                teacher_report: updatedData.teacher_report,
+                teacher_recommendations: updatedData.teacher_recommendations,
+                has_new_comments: updatedData.has_new_comments
+              };
+              studentUpdated = true;
+              break;
+            }
+          }
+          if (studentUpdated) break;
+        }
+      }
+      
+      // Update state only if we found and updated the student
+      if (studentUpdated) {
+        setFilteredStudents(updatedFilteredStudents);
+        setStudents(updatedStudentsArray);
+        
+        // Update selected student data
+        setSelectedStudent(updatedData);
+        
+        console.log("Student data updated successfully");
+      } else {
+        console.warn("Could not find the student to update", updatedData);
+      }
+    } catch (error) {
+      console.error("Error updating student data:", error);
+    }
   };
 
   const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -273,8 +368,8 @@ export default function OverViewPage() {
         </Button>
       </div>
 
-      <div className="mt-4 flex space-between">
-        <div className="w-[15%]">
+      <div className="mt-4 flex space-between flex-wrap sticky top-0 bg-white z-10 pb-4">
+        <div className="w-[15%] min-w-[150px]">
           <label htmlFor="gradeSelect" className="block mb-2">Выберите параллель</label>
           <select
             id="gradeSelect"
@@ -291,7 +386,7 @@ export default function OverViewPage() {
           </select>
         </div>
         
-        <div className="w-[15%] ml-4">
+        <div className="w-[15%] ml-4 min-w-[150px]">
           <label htmlFor="classSelect" className="block mb-2">Выберите класс</label>
           <select
             id="classSelect"
@@ -309,7 +404,7 @@ export default function OverViewPage() {
           </select>
         </div>
         
-        <div className="w-[15%] ml-4">
+        <div className="w-[15%] ml-4 min-w-[150px]">
           <label htmlFor="subjectSelect" className="block mb-2">Выберите предмет</label>
           <select
             id="subjectSelect"
@@ -328,7 +423,7 @@ export default function OverViewPage() {
           </select>
         </div>
 
-        <div className="w-[15%] ml-5">
+        <div className="w-[15%] ml-4 min-w-[150px]">
           <label htmlFor="dangerLevelSelect" className="block mb-2">Выберите уровень</label>
           <select
             id="dangerLevelSelect"
@@ -343,7 +438,7 @@ export default function OverViewPage() {
           </select>
         </div>
 
-        <div className="w-1/3 ml-auto relative flex flex-col justify-end">
+        <div className="w-full md:w-1/3 mt-4 md:mt-0 md:ml-auto relative flex flex-col justify-end">
         <input
           className="peer w-full pl-9 pr-9 mb-0 rounded"
           placeholder="Найти студента..."
@@ -351,7 +446,7 @@ export default function OverViewPage() {
           onChange={handleSearchChange}
           type="search"
         />
-        <div className="pointer-events-none absolute inset-y-0 left-0 top-8 flex items-center justify-center pl-3 text-muted-foreground/80 peer-disabled:opacity-50">
+        <div className="pointer-events-none absolute inset-y-0 left-0 top-0 flex items-center justify-center pl-3 text-muted-foreground/80 peer-disabled:opacity-50">
           <Search
             size={16}
             strokeWidth={2}
@@ -360,7 +455,7 @@ export default function OverViewPage() {
           />
         </div>
         <button
-          className="absolute inset-y-px right-px top-4 flex h-full w-9 items-center justify-center rounded-r-lg text-muted-foreground/80 ring-offset-background transition-shadow hover:text-foreground focus-visible:border focus-visible:border-ring focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="absolute inset-y-px right-px top-0 flex h-full w-9 items-center justify-center rounded-r-lg text-muted-foreground/80 ring-offset-background transition-shadow hover:text-foreground focus-visible:border focus-visible:border-ring focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Submit search"
           type="submit"
         >
@@ -381,7 +476,7 @@ export default function OverViewPage() {
       )
     }
       {filteredStudents.length > 0 && !noClassses && (
-        <div className="overflow-y-auto mt-6">
+        <div className="overflow-y-auto mt-6 max-h-[calc(100vh-250px)]">
           {filteredStudents
             .map((classInfo) => ({
               ...classInfo,
@@ -400,7 +495,11 @@ export default function OverViewPage() {
       )}
 
       {studentModalOpen && selectedStudent && (
-        <StudentPopup studentData={{ ...selectedStudent, curator_name: curator, subject: subject }} onClose={handleClosePopup} />
+        <StudentPopup 
+          studentData={{ ...selectedStudent, curator_name: curator, subject: subject }} 
+          onClose={handleClosePopup} 
+          onSave={handleSaveStudentData}
+        />
       )}
       
       {isModalOpen && (

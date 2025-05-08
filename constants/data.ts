@@ -243,4 +243,18 @@ export interface Student {
   delta_percentage: number;
   class_liter: string;
   curator_name: string;
+  teacher_comment?: string;
+  student_comment?: string;
+  parent_comment?: string;
+  comments_read?: {
+    student_read: boolean;
+    parent_read: boolean;
+  };
+  teacher_report?: string;
+  teacher_recommendations?: {
+    action: string;
+    deadline: string;
+    result?: string;
+  }[];
+  has_new_comments?: boolean;
 }
