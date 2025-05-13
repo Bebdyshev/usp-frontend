@@ -2,8 +2,8 @@ import AppSidebar from '@/components/layout/app-sidebar';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'CandyData - Dashboard',
-  description: 'Basic dashboard with Next.js and Shadcn'
+  title: 'Dashboard',
+  description: 'Dashboard'
 };
 
 export default function DashboardLayout({
