@@ -16,9 +16,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Pencil, Trash2, Plus, Users, BarChart3, GraduationCap } from 'lucide-react';
 import axiosInstance from '@/app/axios/instance';
 import { handleApiError } from '@/utils/errorHandler';
+import StudentManagement from './_components/student-management';
+import AnalyticsOverview from './_components/analytics-overview';
 
 interface Grade {
   id: number;
@@ -27,6 +35,7 @@ interface Grade {
   curatorName: string;
   shanyrak: string;
   studentCount?: number;
+  actualStudentCount?: number;
 }
 
 interface CreateGradePayload {
@@ -165,87 +174,125 @@ export default function ClassManagementPage() {
     <PageContainer scrollable>
       <div className="py-4">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Управление классами</h1>
-          <Button onClick={openCreateDialog} className="flex items-center gap-2">
-            <Plus size={16} /> Добавить класс
-          </Button>
+          <h1 className="text-2xl font-bold">Управление школой</h1>
         </div>
 
-        {error && (
-          <Card className="mb-6 border-red-300 bg-red-50">
-            <CardContent className="p-4 text-red-600">
-              {error}
-            </CardContent>
-          </Card>
-        )}
+        <Tabs defaultValue="classes" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="classes" className="flex items-center gap-2">
+              <GraduationCap size={16} />
+              Классы
+            </TabsTrigger>
+            <TabsTrigger value="students" className="flex items-center gap-2">
+              <Users size={16} />
+              Студенты
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 size={16} />
+              Аналитика
+            </TabsTrigger>
+          </TabsList>
 
-        {loading ? (
-          <Card>
-            <CardContent className="p-6 text-center">
-              Загрузка классов...
-            </CardContent>
-          </Card>
-        ) : grades.length === 0 ? (
-          <Card>
-            <CardContent className="p-6 text-center text-gray-500">
-              Классы не найдены. Нажмите "Добавить класс", чтобы создать новый.
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Классы</CardTitle>
-              <CardDescription>Управление школьными классами</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100 text-left">
-                      <th className="p-3 border-b border-gray-200 font-semibold">Класс</th>
-                      <th className="p-3 border-b border-gray-200 font-semibold">Параллель</th>
-                      <th className="p-3 border-b border-gray-200 font-semibold">Куратор</th>
-                      <th className="p-3 border-b border-gray-200 font-semibold">Шанырак</th>
-                      <th className="p-3 border-b border-gray-200 font-semibold">Кол-во учеников</th>
-                      <th className="p-3 border-b border-gray-200 font-semibold text-right">Действия</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {grades.map(grade => (
-                      <tr key={grade.id} className="hover:bg-gray-50">
-                        <td className="p-3 border-b border-gray-200 font-medium">{grade.grade}</td>
-                        <td className="p-3 border-b border-gray-200">{grade.parallel}</td>
-                        <td className="p-3 border-b border-gray-200">{grade.curatorName}</td>
-                        <td className="p-3 border-b border-gray-200">{grade.shanyrak}</td>
-                        <td className="p-3 border-b border-gray-200">{grade.studentCount || 0}</td>
-                        <td className="p-3 border-b border-gray-200 text-right space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => handleEditClick(grade)}
-                            className="h-8 w-8 inline-flex items-center justify-center"
-                            title="Редактировать"
-                          >
-                            <Pencil size={16} />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => handleDeleteClick(grade)}
-                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 inline-flex items-center justify-center"
-                            title="Удалить"
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          <TabsContent value="classes" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Управление классами</h2>
+              <Button onClick={openCreateDialog} className="flex items-center gap-2">
+                <Plus size={16} /> Добавить класс
+              </Button>
+            </div>
+
+            {error && (
+              <Card className="mb-6 border-red-300 bg-red-50">
+                <CardContent className="p-4 text-red-600">
+                  {error}
+                </CardContent>
+              </Card>
+            )}
+
+            {loading ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  Загрузка классов...
+                </CardContent>
+              </Card>
+            ) : grades.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center text-gray-500">
+                  Классы не найдены. Нажмите "Добавить класс", чтобы создать новый.
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Классы</CardTitle>
+                  <CardDescription>Управление школьными классами</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-100 text-left">
+                          <th className="p-3 border-b border-gray-200 font-semibold">Класс</th>
+                          <th className="p-3 border-b border-gray-200 font-semibold">Параллель</th>
+                          <th className="p-3 border-b border-gray-200 font-semibold">Куратор</th>
+                          <th className="p-3 border-b border-gray-200 font-semibold">Шанырак</th>
+                          <th className="p-3 border-b border-gray-200 font-semibold">Кол-во учеников</th>
+                          <th className="p-3 border-b border-gray-200 font-semibold text-right">Действия</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {grades.map(grade => (
+                          <tr key={grade.id} className="hover:bg-gray-50">
+                            <td className="p-3 border-b border-gray-200 font-medium">{grade.grade}</td>
+                            <td className="p-3 border-b border-gray-200">{grade.parallel}</td>
+                            <td className="p-3 border-b border-gray-200">{grade.curatorName}</td>
+                            <td className="p-3 border-b border-gray-200">{grade.shanyrak}</td>
+                            <td className="p-3 border-b border-gray-200">
+                              {grade.actualStudentCount || 0}
+                              {grade.studentCount !== (grade.actualStudentCount || 0) && (
+                                <span className="text-xs text-gray-500 ml-1">
+                                  (записано: {grade.studentCount || 0})
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3 border-b border-gray-200 text-right space-x-2">
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={() => handleEditClick(grade)}
+                                className="h-8 w-8 inline-flex items-center justify-center"
+                                title="Редактировать"
+                              >
+                                <Pencil size={16} />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={() => handleDeleteClick(grade)}
+                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 inline-flex items-center justify-center"
+                                title="Удалить"
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="students">
+            <StudentManagement grades={grades} onRefreshGrades={fetchGrades} />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsOverview grades={grades} />
+          </TabsContent>
+        </Tabs>
 
         {/* Create Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
