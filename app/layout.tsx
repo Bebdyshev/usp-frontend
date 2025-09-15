@@ -51,6 +51,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning={true}>
       <body
         className={`${inter.variable} ${nacelle.variable} bg-white-500 font-inter min-h-screen text-base text-wgi-200 antialiased`}
+        suppressHydrationWarning={true}
       >
         <NextTopLoader showSpinner={false} />
           <Toaster />
