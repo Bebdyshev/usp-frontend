@@ -16,6 +16,7 @@ import Image from "next/image";
 import { TypeAnimation } from "react-type-animation";
 import axios from "axios";
 import { handleApiError } from "@/utils/errorHandler";
+import { env } from "process";
 
 const commonStyles = {
   inputIcon: "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none",
@@ -97,6 +98,8 @@ export default function SignIn() {
       setLoading(false);
     }
   };
+
+  console.log(process.env.NEXT_PUBLIC_BACKEND_URL)
 
   return (
     <section className="bg-white max-h-screen">
