@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import axiosInstance from "@/app/axios/instance";
+import api from "@/lib/api";
 import TableContainer from './table';
 import ChartContainer from './piechart';
 
@@ -25,8 +25,7 @@ export default function DashBoardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('dashboard/danger-levels');
-        const data = response.data;
+        const data = await api.getDangerLevels();
 
         setDangerLevels({
           level3: data.danger_level_stats[3]?.student_count || 0,
@@ -37,9 +36,9 @@ export default function DashBoardPage() {
         setDangerousClasses(data.all_dangerous_classes);
         
         try {
-          const piechartResponse = await axiosInstance.get('dashboard/danger-levels-piechart');
-          if (piechartResponse.data && piechartResponse.data.class_danger_percentages) {
-            setClassDangerPercentages(piechartResponse.data.class_danger_percentages);
+          const piechartData = await api.getDangerLevelsPieChart();
+          if (piechartData && piechartData.class_danger_percentages) {
+            setClassDangerPercentages(piechartData.class_danger_percentages);
           }
         } catch (piechartError) {
           console.error('Error fetching piechart data:', piechartError);

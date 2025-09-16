@@ -23,8 +23,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Pencil, Trash2, Plus, Users, BarChart3, GraduationCap } from 'lucide-react';
-import axiosInstance from '@/app/axios/instance';
-import { handleApiError } from '@/utils/errorHandler';
+import api, { Grade as ApiGrade } from '@/lib/api';
+import { ApiError } from '@/utils/errorHandler';
 import StudentManagement from './_components/student-management';
 import AnalyticsOverview from './_components/analytics-overview';
 
@@ -69,11 +69,11 @@ export default function ClassManagementPage() {
   const fetchGrades = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get('/grades/all/');
-      setGrades(response.data);
+      const grades = await api.getAllGrades();
+      setGrades(grades);
       setError(null);
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       setError(apiError.message);
       toast.error(`Ошибка загрузки классов: ${apiError.message}`);
     } finally {
@@ -107,13 +107,13 @@ export default function ClassManagementPage() {
 
   const handleCreateGrade = async () => {
     try {
-      await axiosInstance.post('/grades/', formData);
+      await api.createGrade(formData as any);
       toast.success('Класс успешно создан');
       setIsCreateDialogOpen(false);
       resetForm();
       fetchGrades();
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       toast.error(`Ошибка создания класса: ${apiError.message}`);
     }
   };
@@ -134,13 +134,13 @@ export default function ClassManagementPage() {
     if (!currentGrade) return;
     
     try {
-      await axiosInstance.put(`/grades/${currentGrade.id}`, formData);
+      await api.updateGrade(currentGrade.id, formData as any);
       toast.success('Класс успешно обновлен');
       setIsEditDialogOpen(false);
       resetForm();
       fetchGrades();
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       toast.error(`Ошибка обновления класса: ${apiError.message}`);
     }
   };
@@ -154,13 +154,13 @@ export default function ClassManagementPage() {
     if (!currentGrade) return;
     
     try {
-      await axiosInstance.delete(`/grades/${currentGrade.id}`);
+      await api.deleteGrade(currentGrade.id);
       toast.success('Класс успешно удален');
       setIsDeleteDialogOpen(false);
       resetForm();
       fetchGrades();
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       toast.error(`Ошибка удаления класса: ${apiError.message}`);
     }
   };

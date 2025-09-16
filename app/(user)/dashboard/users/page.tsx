@@ -16,8 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Pencil, Trash2, Plus, Eye, EyeOff } from 'lucide-react';
-import axiosInstance from '@/app/axios/instance';
-import { handleApiError } from '@/utils/errorHandler';
+import api, { User, CreateUserRequest, UpdateUserRequest } from '@/lib/api';
+import { ApiError } from '@/utils/errorHandler';
 import {
   Select,
   SelectContent,
@@ -26,26 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  type: string;
-}
-
-interface CreateUserPayload {
-  name: string;
-  email: string;
-  password: string;
-  type: string;
-}
-
-interface UpdateUserPayload {
-  name?: string;
-  email?: string;
-  password?: string;
-  type?: string;
-}
+// Types are now imported from api.ts
 
 export default function UsersManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -56,7 +37,7 @@ export default function UsersManagementPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState<CreateUserPayload & UpdateUserPayload>({
+  const [formData, setFormData] = useState<CreateUserRequest & UpdateUserRequest>({
     name: '',
     email: '',
     password: '',
@@ -70,11 +51,11 @@ export default function UsersManagementPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get('/users/');
-      setUsers(response.data);
+      const users = await api.getUsers();
+      setUsers(users);
       setError(null);
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       setError(apiError.message);
       toast.error(`Ошибка загрузки пользователей: ${apiError.message}`);
     } finally {
@@ -109,13 +90,13 @@ export default function UsersManagementPage() {
     }
 
     try {
-      await axiosInstance.post('/users/', formData);
+      await api.createUser(formData as CreateUserRequest);
       toast.success('Пользователь успешно создан');
       setIsCreateDialogOpen(false);
       resetForm();
       fetchUsers();
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       toast.error(`Ошибка создания пользователя: ${apiError.message}`);
     }
   };
@@ -135,7 +116,7 @@ export default function UsersManagementPage() {
     if (!currentUser) return;
     
     // Создаем объект только с заполненными полями
-    const updateData: UpdateUserPayload = {};
+    const updateData: UpdateUserRequest = {};
     if (formData.name) updateData.name = formData.name;
     if (formData.email) updateData.email = formData.email;
     if (formData.password) updateData.password = formData.password;
@@ -148,13 +129,13 @@ export default function UsersManagementPage() {
     }
     
     try {
-      await axiosInstance.put(`/users/${currentUser.id}`, updateData);
+      await api.updateUser(currentUser.id, updateData);
       toast.success('Пользователь успешно обновлен');
       setIsEditDialogOpen(false);
       resetForm();
       fetchUsers();
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       toast.error(`Ошибка обновления пользователя: ${apiError.message}`);
     }
   };
@@ -168,13 +149,13 @@ export default function UsersManagementPage() {
     if (!currentUser) return;
     
     try {
-      await axiosInstance.delete(`/users/${currentUser.id}`);
+      await api.deleteUser(currentUser.id);
       toast.success('Пользователь успешно удален');
       setIsDeleteDialogOpen(false);
       resetForm();
       fetchUsers();
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       toast.error(`Ошибка удаления пользователя: ${apiError.message}`);
     }
   };

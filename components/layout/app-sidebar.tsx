@@ -1,6 +1,6 @@
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import axiosInstance from '@/app/axios/instance';
+import api from '@/lib/api';
 import {
   Collapsible,
   CollapsibleContent,
@@ -63,8 +63,8 @@ export default function AppSidebar({
   useEffect(() => {
     async function fetchUserInfo() {
       try {
-        const response = await axiosInstance.get('/auth/users/me');
-        setUserInfo(response.data);
+        const userInfo = await api.getCurrentUser();
+        setUserInfo(userInfo);
       } catch (error) {
         console.error('Failed to fetch user information:', error);
       }

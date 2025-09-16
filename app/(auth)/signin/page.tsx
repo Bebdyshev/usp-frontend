@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import axiosInstance from '../../axios/instance';
+import api from '@/lib/api';
 import { toast } from 'react-toastify';
 import {
   FaUser,
@@ -14,8 +14,7 @@ import {
 } from "react-icons/fa";
 import Image from "next/image";
 import { TypeAnimation } from "react-type-animation";
-import axios from "axios";
-import { handleApiError } from "@/utils/errorHandler";
+import { ApiError } from "@/utils/errorHandler";
 import { env } from "process";
 
 const commonStyles = {
@@ -49,15 +48,16 @@ export default function SignIn() {
     }
 
     setLoading(true);
-    console.log(axiosInstance)
     try {
-      const resp = await axiosInstance.post("/auth/login", { email: formData.email, password: formData.password });
-      const token = resp.data.access_token; 
-      localStorage.setItem('access_token', token);
+      const response = await api.login({ 
+        email: formData.email, 
+        password: formData.password 
+      });
+      localStorage.setItem('access_token', response.access_token);
       toast.success("Вход выполнен успешно");
       router.push("/dashboard/home");
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       setError(apiError.message);
       toast.error(apiError.message);
       
@@ -82,11 +82,15 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const resp = await axiosInstance.post("/signup", formData);
+      await api.signup({
+        email: formData.email,
+        password: formData.password,
+        company_name: formData.company_name
+      });
       toast.success("Регистрация прошла успешно, пожалуйста, войдите в систему.");
       setIsLogin(true); // Redirect to login form after sign-up
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       setError(apiError.message);
       toast.error(apiError.message);
       

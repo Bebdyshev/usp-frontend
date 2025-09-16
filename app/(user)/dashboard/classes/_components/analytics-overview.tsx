@@ -13,8 +13,8 @@ import {
   AlertTriangle,
   CheckCircle 
 } from 'lucide-react';
-import axiosInstance from '@/app/axios/instance';
-import { handleApiError } from '@/utils/errorHandler';
+import api from '@/lib/api';
+import { ApiError } from '@/utils/errorHandler';
 import { toast } from 'react-toastify';
 
 interface Grade {
@@ -51,37 +51,20 @@ export default function AnalyticsOverview({ grades }: AnalyticsOverviewProps) {
     setLoading(true);
     try {
       // Fetch subjects and parallels
-      const [subjectsResponse, parallelsResponse] = await Promise.all([
-        axiosInstance.get('/grades/subjects'),
-        axiosInstance.get('/grades/parallels')
+      const [subjects, parallels] = await Promise.all([
+        api.getSubjects(),
+        api.getParallels()
       ]);
 
-      setSubjects(subjectsResponse.data);
-      setParallels(parallelsResponse.data);
+      setSubjects(subjects);
+      setParallels(parallels);
 
-      // Fetch danger level statistics
-      const dangerLevels = [1, 2, 3];
-      const dangerStatsPromises = dangerLevels.map(async (level) => {
-        try {
-          const response = await axiosInstance.get(`/grades/get_students_danger?level=${level}`);
-          const studentCount = response.data.filtered_class_data.reduce(
-            (total: number, classData: any) => total + classData.class.length, 0
-          );
-          return {
-            level,
-            count: studentCount,
-            students: response.data.filtered_class_data
-          };
-        } catch (error) {
-          return { level, count: 0, students: [] };
-        }
-      });
-
-      const dangerResults = await Promise.all(dangerStatsPromises);
+      // Fetch danger level statistics using the analytics method
+      const dangerResults = await api.getAnalytics();
       setDangerStats(dangerResults);
 
     } catch (err) {
-      const apiError = handleApiError(err);
+      const apiError = err as ApiError;
       toast.error(`Ошибка загрузки аналитики: ${apiError.message}`);
     } finally {
       setLoading(false);
