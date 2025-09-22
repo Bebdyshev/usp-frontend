@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ClassInfo } from "@/constants/data";
+import { ClassInfo, subjectData } from "@/constants/data";
+import axios from "axios";
 
 interface FileUploadModalProps {
   isOpen: boolean;
@@ -9,7 +10,7 @@ interface FileUploadModalProps {
   classData: ClassInfo[];
   selectedOptionClass: string;
   handleClassOptionChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleSubmit: (fileInputRef: React.RefObject<HTMLInputElement>) => void;
+  handleSubmit: (fileInputRef: React.RefObject<HTMLInputElement>, subject: string) => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
 }
 
@@ -24,13 +25,15 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [availableClasses, setAvailableClasses] = useState<ClassInfo[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
 
   // Получаем уникальные параллели
   const gradeNumbers = Array.from(new Set((classData || []).map(item => 
     item.class_liter.replace(/[^0-9]/g, '')
   ))).sort();
 
-  // При изменении параллели обновляем список доступных классов
+  // При изменении параллели обновляем список доступных классов и предметов
   useEffect(() => {
     if (selectedGrade && classData) {
       const filteredClasses = classData.filter(item => 
@@ -38,8 +41,12 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
       );
       setAvailableClasses(filteredClasses);
       
+      // Получаем предметы для выбранной параллели
+      const subjectsForGrade = subjectData.find(item => item.classNumber === selectedGrade);
+      setAvailableSubjects(subjectsForGrade ? subjectsForGrade.subjects : []);
+      setSelectedSubject(""); // Сбрасываем выбранный предмет
+      
       // Если есть классы в этой параллели и не выбран класс, выбираем первый по умолчанию
-      // Adding check to only set default class when no class is selected or when grade changes
       if (filteredClasses.length > 0 && (!selectedOptionClass || !filteredClasses.find(c => c.class_liter === selectedOptionClass))) {
         handleClassOptionChange({
           target: { value: filteredClasses[0].class_liter }
@@ -47,6 +54,8 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
       }
     } else {
       setAvailableClasses([]);
+      setAvailableSubjects([]);
+      setSelectedSubject("");
     }
   }, [selectedGrade, classData, selectedOptionClass, handleClassOptionChange]);
 
@@ -103,6 +112,28 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </div>
 
         <div className="mb-4">
+          <label className="block mb-2">
+            Выберите предмет
+          </label>
+          <select
+            id="subjectSelect"
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            className={`w-full p-2 border rounded ${!selectedGrade ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+            disabled={!selectedGrade}
+          >
+            <option value="">
+              {selectedGrade ? "Выберите предмет" : "Сначала выберите параллель"}
+            </option>
+            {availableSubjects && availableSubjects.length > 0 && availableSubjects.map((subject, index) => (
+              <option key={index} value={subject}>
+                {subject}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-4">
           <label htmlFor="fileInput" className="block mb-2">
             Загрузите Excel файл
           </label>
@@ -119,8 +150,8 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
             Назад
           </Button>
           <Button 
-            onClick={() => handleSubmit(fileInputRef)}
-            disabled={!selectedOptionClass}
+            onClick={() => handleSubmit(fileInputRef, selectedSubject)}
+            disabled={!selectedOptionClass || !selectedSubject}
           >
             Отправить файл
           </Button>

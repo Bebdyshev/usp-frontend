@@ -1,14 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Student } from '@/constants/data';
 import { AreaChart } from './area-graph';
+import { Trash2 } from 'lucide-react';
+import axios from 'axios';
 
 interface StudentPopupProps {
   studentData: Student;
   onClose: () => void;
+  onDelete?: () => void;
 }
 
 // Function to determine danger level color
@@ -27,7 +30,37 @@ const calculateDifference = (actual: number, predicted: number) => {
 };
 
 
-export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose }) => {
+export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose, onDelete }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDelete = async () => {
+    if (!studentData.id) {
+      alert("ID студента не найден");
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const token = localStorage.getItem('access_token');
+      
+      await axios.delete(`http://127.0.0.1:8000/grades/students/${studentData.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      alert("Студент успешно удален");
+      if (onDelete) onDelete();
+      onClose();
+    } catch (error) {
+      console.error("Ошибка при удалении студента:", error);
+      alert("Произошла ошибка при удалении студента");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
   return (
     <div
       className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
@@ -107,10 +140,38 @@ export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose
           </div>
         </div>
 
-        <div className="mt-auto flex justify-end space-x-2 p-6 ">
-          <Button className="w-full bg-gray-400 hover:bg-[#9ca4ac] w-20" onClick={onClose}>
-            Назад
-          </Button>
+        <div className="mt-auto flex justify-end space-x-2 p-6">
+          {showDeleteConfirm ? (
+            <>
+              <Button 
+                className="bg-red-500 hover:bg-red-600 text-white" 
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Удаление..." : "Подтвердить удаление"}
+              </Button>
+              <Button 
+                className="bg-gray-400 hover:bg-gray-500" 
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+              >
+                Отмена
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2" 
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 size={16} />
+                Удалить
+              </Button>
+              <Button className="bg-gray-400 hover:bg-[#9ca4ac]" onClick={onClose}>
+                Назад
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

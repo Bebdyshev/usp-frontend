@@ -100,6 +100,10 @@ export default function OverViewPage() {
     setStudentModalOpen(false);
   };
 
+  const handleStudentDelete = () => {
+    fetchClassData(); // Refresh data after deletion
+  };
+
   const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedSubject = e.target.value;
     setSelectedSubject(selectedSubject);
@@ -188,9 +192,9 @@ export default function OverViewPage() {
     setIsModalOpen(false);
   };
 
-  const handleSubmit = async (fileInputRef: React.RefObject<HTMLInputElement>) => {
-    if (!selectedOptionClass || !fileInputRef.current?.files?.length) {
-      alert("Please select a class and upload a file.");
+  const handleSubmit = async (fileInputRef: React.RefObject<HTMLInputElement>, subject: string) => {
+    if (!selectedOptionClass || !fileInputRef.current?.files?.length || !subject) {
+      alert("Please select a class, subject and upload a file.");
       return;
     }
   
@@ -205,7 +209,7 @@ export default function OverViewPage() {
     const foundClass = classData.find(c => c.class_liter === selectedOptionClass);
     const curatorName = foundClass?.curator || "";
     formData.append("curator", curatorName);
-    formData.append("subject", "Биология");
+    formData.append("subject", subject);
     formData.append("file", file);
   
     try {
@@ -348,7 +352,11 @@ export default function OverViewPage() {
       )}
 
       {studentModalOpen && selectedStudent && (
-        <StudentPopup studentData={{ ...selectedStudent, curator_name: curator, subject: subject }} onClose={handleClosePopup} />
+        <StudentPopup 
+          studentData={{ ...selectedStudent, curator_name: curator, subject: subject }} 
+          onClose={handleClosePopup} 
+          onDelete={handleStudentDelete}
+        />
       )}
       
       {isModalOpen && (
