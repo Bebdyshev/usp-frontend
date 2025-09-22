@@ -124,14 +124,14 @@ export type Product = {
 export const navItems: NavItem[] = [
   {
     title: 'Панель управления',
-    url: '/d/dashboard',
+    url: '/dashboard/home',
     icon: 'dashboard',
     isActive: false,
     items: [] // Empty array as there are no child items for Dashboard
   },
   {
     title: 'Студенты',
-    url: '/d/students',
+    url: '/dashboard/students',
     icon: 'users',
     isActive: false,
     items: [] // Empty array as there are no child items for Dashboard

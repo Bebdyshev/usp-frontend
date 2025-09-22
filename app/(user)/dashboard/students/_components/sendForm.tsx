@@ -29,9 +29,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
 
   // Получаем уникальные параллели
-  const gradeNumbers = Array.from(new Set((classData || []).map(item => 
-    item.class_liter.replace(/[^0-9]/g, '')
-  ))).sort();
+  const gradeNumbers = classData
 
   // При изменении параллели обновляем список доступных классов и предметов
   useEffect(() => {
