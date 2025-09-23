@@ -63,6 +63,8 @@ export function UploadScores({ onUploadComplete, trigger }: UploadScoresProps) {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
+  const [teacherNames, setTeacherNames] = useState<string[]>([]);
+  const [loadingTeachers, setLoadingTeachers] = useState(false);
   
   // Upload result
   const [uploadResult, setUploadResult] = useState<ExcelUploadResponse | null>(null);
@@ -84,6 +86,40 @@ export function UploadScores({ onUploadComplete, trigger }: UploadScoresProps) {
       setFormData(prev => ({ ...prev, subgroup_id: undefined }));
     }
   }, [formData.grade_id]);
+
+  // Load teachers when subject (or grade) changes
+  useEffect(() => {
+    const loadTeachers = async () => {
+      if (!formData.subject_id) {
+        setTeacherNames([]);
+        setFormData(prev => ({ ...prev, teacher_name: '' }));
+        return;
+      }
+      setLoadingTeachers(true);
+      try {
+        const params: any = { subject_id: formData.subject_id };
+        if (formData.grade_id) params.grade_id = formData.grade_id;
+        let assignments = await api.getTeacherAssignments(params);
+        // Fallback: if no grade-specific assignment, use subject-wide
+        if (!Array.isArray(assignments) || assignments.length === 0) {
+          assignments = await api.getTeacherAssignments({ subject_id: formData.subject_id });
+        }
+        const names = Array.from(
+          new Set((assignments as any[])
+            .filter(a => a.is_active === 1 && a.teacher_name)
+            .map(a => a.teacher_name as string))
+        );
+        setTeacherNames(names);
+        // Clear selection if current teacher not in list
+        setFormData(prev => ({ ...prev, teacher_name: names.includes(prev.teacher_name) ? prev.teacher_name : '' }));
+      } catch (e) {
+        setTeacherNames([]);
+      } finally {
+        setLoadingTeachers(false);
+      }
+    };
+    loadTeachers();
+  }, [formData.subject_id, formData.grade_id]);
 
   const loadInitialData = async () => {
     setLoading(true);
@@ -339,21 +375,30 @@ export function UploadScores({ onUploadComplete, trigger }: UploadScoresProps) {
                   </Select>
                 </div>
 
-                {/* Teacher Name */}
+                {/* Teacher Selection */}
                 <div className="space-y-2">
-                  <Label htmlFor="teacher-name">Имя учителя *</Label>
-                  <Input
-                    id="teacher-name"
-                    type="text"
-                    placeholder="Введите имя учителя"
-                    value={formData.teacher_name}
-                    onChange={(e) => handleInputChange('teacher_name', e.target.value)}
-                  />
+                  <Label htmlFor="teacher-select">Имя учителя *</Label>
+                  <Select
+                    value={formData.teacher_name || ''}
+                    onValueChange={(value) => handleInputChange('teacher_name', value)}
+                    disabled={!formData.subject_id || loadingTeachers}
+                  >
+                    <SelectTrigger id="teacher-select">
+                      <SelectValue placeholder={loadingTeachers ? 'Загрузка...' : (teacherNames.length ? 'Выберите учителя' : 'Нет учителей для предмета')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teacherNames.map((name) => (
+                        <SelectItem key={name} value={name}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {/* Semester */}
+                {/* Quarter */}
                 <div className="space-y-2">
-                  <Label htmlFor="semester-select">Семестр</Label>
+                  <Label htmlFor="semester-select">Четверть</Label>
                   <Select
                     value={formData.semester.toString()}
                     onValueChange={(value) => handleInputChange('semester', parseInt(value))}
@@ -362,8 +407,10 @@ export function UploadScores({ onUploadComplete, trigger }: UploadScoresProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 семестр</SelectItem>
-                      <SelectItem value="2">2 семестр</SelectItem>
+                      <SelectItem value="1">I четверть</SelectItem>
+                      <SelectItem value="2">II четверть</SelectItem>
+                      <SelectItem value="3">III четверть</SelectItem>
+                      <SelectItem value="4">IV четверть</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -486,9 +533,9 @@ export function UploadScores({ onUploadComplete, trigger }: UploadScoresProps) {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {Object.entries(uploadResult.danger_distribution).map(([level, count]) => (
                           <div key={level} className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${DANGER_LEVEL_COLORS[level as keyof typeof DANGER_LEVEL_COLORS]}`}></div>
+                            <div className={`w-3 h-3 rounded-full ${DANGER_LEVEL_COLORS[Number(level) as 0 | 1 | 2 | 3]}`}></div>
                             <span className="text-sm">
-                              {DANGER_LEVEL_NAMES[level as keyof typeof DANGER_LEVEL_NAMES]}: {count}
+                              {DANGER_LEVEL_NAMES[Number(level) as 0 | 1 | 2 | 3]}: {count}
                             </span>
                           </div>
                         ))}

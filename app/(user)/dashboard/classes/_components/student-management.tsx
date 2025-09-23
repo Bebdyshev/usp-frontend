@@ -31,6 +31,12 @@ interface Student {
   name: string;
   email?: string;
   grade_id: number;
+  avg_percentage?: number | null;
+  predicted_avg?: number | null;
+  danger_level?: number | null;
+  delta_percentage?: number | null;
+  last_subject?: string | null;
+  last_semester?: number | null;
 }
 
 interface Grade {
@@ -51,16 +57,13 @@ interface StudentManagementProps {
 export default function StudentManagement({ grades, onRefreshGrades }: StudentManagementProps) {
   const [selectedGradeId, setSelectedGradeId] = useState<number | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [subjects, setSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    subject: ''
+    email: ''
   });
 
   const selectedGrade = grades.find(g => g.id === selectedGradeId);
@@ -71,22 +74,7 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
     }
   }, [selectedGradeId]);
 
-  useEffect(() => {
-    fetchSubjects();
-  }, []);
-
-  const fetchSubjects = async () => {
-    setSubjectsLoading(true);
-    try {
-      const subjectsList = await api.getSubjects();
-      setSubjects(subjectsList);
-    } catch (err) {
-      const apiError = handleApiError(err);
-      toast.error(`Ошибка загрузки предметов: ${apiError.message}`);
-    } finally {
-      setSubjectsLoading(false);
-    }
-  };
+  // No subjects on create student; subjects/оценки добавляются через Excel
 
   const fetchStudents = async (gradeId: number) => {
     setLoading(true);
@@ -107,7 +95,7 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
   };
 
   const resetForm = () => {
-    setFormData({ name: '', email: '', subject: '' });
+    setFormData({ name: '', email: '' });
     setCurrentStudent(null);
   };
 
@@ -200,11 +188,12 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
           <div className="flex gap-4 items-end">
             <div className="flex-1">
               <Label htmlFor="grade-select">Выберите класс</Label>
-              <Select value={selectedGradeId?.toString() || ""} onValueChange={(value) => setSelectedGradeId(parseInt(value))}>
+              <Select value={selectedGradeId?.toString() || 'none'} onValueChange={(value) => setSelectedGradeId(value === 'none' ? null : parseInt(value))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Выберите класс..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Не выбран</SelectItem>
                   {grades.map((grade) => (
                     <SelectItem key={grade.id} value={grade.id.toString()}>
                       {grade.grade} - {grade.curatorName} ({grade.actualStudentCount || 0} студентов)
@@ -289,6 +278,12 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
                       <th className="p-3 border-b border-gray-200 font-semibold">ID</th>
                       <th className="p-3 border-b border-gray-200 font-semibold">Имя</th>
                       <th className="p-3 border-b border-gray-200 font-semibold">Email</th>
+                      <th className="p-3 border-b border-gray-200 font-semibold">Предмет</th>
+                      <th className="p-3 border-b border-gray-200 font-semibold">Четверть</th>
+                      <th className="p-3 border-b border-gray-200 font-semibold">Средний факт %</th>
+                      <th className="p-3 border-b border-gray-200 font-semibold">Предикт %</th>
+                      <th className="p-3 border-b border-gray-200 font-semibold">Δ%</th>
+                      <th className="p-3 border-b border-gray-200 font-semibold">Риск</th>
                       <th className="p-3 border-b border-gray-200 font-semibold text-right">Действия</th>
                     </tr>
                   </thead>
@@ -299,6 +294,25 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
                         <td className="p-3 border-b border-gray-200 font-medium">{student.name}</td>
                         <td className="p-3 border-b border-gray-200 text-gray-600">
                           {student.email || 'Не указан'}
+                        </td>
+                        <td className="p-3 border-b border-gray-200 text-gray-600">{student.last_subject || '-'}</td>
+                        <td className="p-3 border-b border-gray-200 text-gray-600">{student.last_semester ? `${student.last_semester}` : '-'}</td>
+                        <td className="p-3 border-b border-gray-200">{student.avg_percentage ?? '-'}</td>
+                        <td className="p-3 border-b border-gray-200">{student.predicted_avg ?? '-'}</td>
+                        <td className="p-3 border-b border-gray-200">{student.delta_percentage ?? '-'}</td>
+                        <td className="p-3 border-b border-gray-200">
+                          {typeof student.danger_level === 'number' ? (
+                            <Badge
+                              className={
+                                student.danger_level === 0 ? 'bg-green-100 text-green-800' :
+                                student.danger_level === 1 ? 'bg-yellow-100 text-yellow-800' :
+                                student.danger_level === 2 ? 'bg-orange-100 text-orange-800' :
+                                'bg-red-100 text-red-800'
+                              }
+                            >
+                              {student.danger_level === 0 ? 'Низкий' : student.danger_level === 1 ? 'Умеренный' : student.danger_level === 2 ? 'Высокий' : 'Критический'}
+                            </Badge>
+                          ) : '-'}
                         </td>
                         <td className="p-3 border-b border-gray-200 text-right">
                           <Button 
@@ -354,26 +368,7 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
                 onChange={handleInputChange}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="student-subject">Предмет (необязательно)</Label>
-              <Select 
-                value={formData.subject} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}
-                disabled={subjectsLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={subjectsLoading ? "Загрузка..." : "Выберите предмет"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Без предмета</SelectItem>
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject} value={subject}>
-                      {subject}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Предмет убран — добавляется через Excel */}
           </div>
           <DialogFooter>
             <Button 

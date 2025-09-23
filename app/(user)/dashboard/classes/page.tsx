@@ -23,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Pencil, Trash2, Plus, Users, BarChart3, GraduationCap, Upload, Settings } from 'lucide-react';
+import { Pencil, Trash2, Plus, Users, BarChart3, GraduationCap, Upload } from 'lucide-react';
 import api, { Grade as ApiGrade } from '@/lib/api';
 import { ApiError } from '@/utils/errorHandler';
 import StudentManagement from './_components/student-management';
@@ -31,40 +31,49 @@ import AnalyticsOverview from './_components/analytics-overview';
 import { UploadScores } from './_components/upload-scores';
 import { useAvailableClasses } from '@/hooks/use-system-settings';
 
-interface Grade {
+interface LocalGrade {
   id: number;
   grade: string;
   parallel: string;
-  curatorName: string;
-  shanyrak: string;
-  studentCount?: number;
-  actualStudentCount?: number;
+  curator_id?: number;
+  curator_name?: string;
+  student_count: number;
+  actual_student_count?: number;
+  curator_info?: {
+    id: number;
+    name: string;
+    first_name?: string;
+    last_name?: string;
+    email: string;
+    shanyrak?: string;
+  };
 }
 
 interface CreateGradePayload {
   grade: string;
   parallel: string;
-  curatorName: string;
-  shanyrak: string;
-  studentCount?: number;
+  curator_id?: number;
+  curator_name?: string;
+  student_count?: number;
 }
 
 export default function ClassManagementPage() {
-  const [grades, setGrades] = useState<Grade[]>([]);
+  const [grades, setGrades] = useState<LocalGrade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { classes: availableClasses, grades: availableGrades, loading: classesLoading } = useAvailableClasses();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentGrade, setCurrentGrade] = useState<Grade | null>(null);
+  const [currentGrade, setCurrentGrade] = useState<LocalGrade | null>(null);
   const [formData, setFormData] = useState<CreateGradePayload>({
     grade: '',
     parallel: '',
-    curatorName: 'Неизвестный куратор',
-    shanyrak: '',
-    studentCount: 0
+    curator_id: undefined,
+    curator_name: undefined,
+    student_count: 0
   });
+  const [curators, setCurators] = useState<any[]>([]);
   const [selectedParallel, setSelectedParallel] = useState<string>('');
   const [selectedLetter, setSelectedLetter] = useState<string>('');
 
@@ -84,7 +93,17 @@ export default function ClassManagementPage() {
 
   useEffect(() => {
     fetchGrades();
+    fetchCurators();
   }, []);
+
+  const fetchCurators = async () => {
+    try {
+      const curatorsData = await api.getAvailableCurators();
+      setCurators(curatorsData);
+    } catch (error) {
+      console.error('Failed to fetch curators:', error);
+    }
+  };
 
   const fetchGrades = async () => {
     setLoading(true);
@@ -118,9 +137,9 @@ export default function ClassManagementPage() {
     setFormData({
       grade: '',
       parallel: '',
-      curatorName: 'Неизвестный куратор',
-      shanyrak: '',
-      studentCount: 0
+      curator_id: undefined,
+      curator_name: undefined,
+      student_count: 0
     });
     setCurrentGrade(null);
     setSelectedParallel('');
@@ -140,14 +159,14 @@ export default function ClassManagementPage() {
     }
   };
 
-  const handleEditClick = (grade: Grade) => {
+  const handleEditClick = (grade: LocalGrade) => {
     setCurrentGrade(grade);
     setFormData({
       grade: grade.grade || '',
       parallel: grade.parallel || '',
-      curatorName: grade.curatorName || 'Неизвестный куратор',
-      shanyrak: grade.shanyrak || '',
-      studentCount: grade.studentCount || 0
+      curator_id: grade.curator_id,
+      curator_name: grade.curator_name,
+      student_count: grade.student_count || 0
     });
     setIsEditDialogOpen(true);
   };
@@ -167,7 +186,7 @@ export default function ClassManagementPage() {
     }
   };
 
-  const handleDeleteClick = (grade: Grade) => {
+  const handleDeleteClick = (grade: LocalGrade) => {
     setCurrentGrade(grade);
     setIsDeleteDialogOpen(true);
   };
@@ -279,7 +298,6 @@ export default function ClassManagementPage() {
                           <th className="p-3 border-b border-gray-200 font-semibold">Класс</th>
                           <th className="p-3 border-b border-gray-200 font-semibold">Параллель</th>
                           <th className="p-3 border-b border-gray-200 font-semibold">Куратор</th>
-                          <th className="p-3 border-b border-gray-200 font-semibold">Шанырак</th>
                           <th className="p-3 border-b border-gray-200 font-semibold">Кол-во учеников</th>
                           <th className="p-3 border-b border-gray-200 font-semibold text-right">Действия</th>
                         </tr>
@@ -289,13 +307,24 @@ export default function ClassManagementPage() {
                           <tr key={grade.id} className="hover:bg-gray-50">
                             <td className="p-3 border-b border-gray-200 font-medium">{grade.grade}</td>
                             <td className="p-3 border-b border-gray-200">{grade.parallel}</td>
-                            <td className="p-3 border-b border-gray-200">{grade.curatorName}</td>
-                            <td className="p-3 border-b border-gray-200">{grade.shanyrak}</td>
                             <td className="p-3 border-b border-gray-200">
-                              {grade.actualStudentCount || 0}
-                              {grade.studentCount !== (grade.actualStudentCount || 0) && (
+                              {grade.curator_info ? (
+                                <div>
+                                  <div className="font-medium">{grade.curator_info.name}</div>
+                                  <div className="text-xs text-gray-500">{grade.curator_info.email}</div>
+                                  {grade.curator_info.shanyrak && (
+                                    <div className="text-xs text-blue-600">{grade.curator_info.shanyrak}</div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">Не назначен</span>
+                              )}
+                            </td>
+                            <td className="p-3 border-b border-gray-200">
+                              {grade.actual_student_count || 0}
+                              {grade.student_count !== (grade.actual_student_count || 0) && (
                                 <span className="text-xs text-gray-500 ml-1">
-                                  (записано: {grade.studentCount || 0})
+                                  (записано: {grade.student_count || 0})
                                 </span>
                               )}
                             </td>
@@ -330,12 +359,35 @@ export default function ClassManagementPage() {
           </TabsContent>
 
           <TabsContent value="students">
-            <StudentManagement grades={grades} onRefreshGrades={fetchGrades} />
+            <StudentManagement 
+              grades={grades.map(g => ({
+                id: g.id,
+                grade: g.grade,
+                parallel: g.parallel,
+                curatorName: g.curator_info?.name || g.curator_name || 'Не назначен',
+                shanyrak: g.curator_info?.shanyrak || '',
+                studentCount: g.student_count,
+                actualStudentCount: g.actual_student_count
+              }))} 
+              onRefreshGrades={fetchGrades} 
+            />
           </TabsContent>
 
           <TabsContent value="analytics">
-            <AnalyticsOverview grades={grades} />
+            <AnalyticsOverview 
+              grades={grades.map(g => ({
+                id: g.id,
+                grade: g.grade,
+                parallel: g.parallel,
+                curatorName: g.curator_info?.name || g.curator_name || 'Не назначен',
+                shanyrak: g.curator_info?.shanyrak || '',
+                studentCount: g.student_count,
+                actualStudentCount: g.actual_student_count
+              }))} 
+            />
           </TabsContent>
+
+          
         </Tabs>
 
         {/* Create Dialog */}
@@ -399,33 +451,41 @@ export default function ClassManagementPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="curatorName">Имя куратора</Label>
-                <Input
-                  id="curatorName"
-                  name="curatorName"
-                  placeholder="например, Иванов И.И."
-                  value={formData.curatorName}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="shanyrak">Шанырак</Label>
-                <Input
-                  id="shanyrak"
-                  name="shanyrak"
-                  placeholder="например, Көшбасшы"
-                  value={formData.shanyrak}
-                  onChange={handleInputChange}
-                />
+                <Label htmlFor="curator">Куратор</Label>
+                <Select
+                  value={formData.curator_id?.toString() || ''}
+                  onValueChange={(value) => {
+                    const curatorId = value && value !== 'none' ? parseInt(value) : undefined;
+                    const curator = curators.find(c => c.id === curatorId);
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      curator_id: curatorId,
+                      curator_name: curator?.name
+                    }));
+                  }}
+                >
+                  <SelectTrigger id="curator">
+                    <SelectValue placeholder="Выберите куратора" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Без куратора</SelectItem>
+                    {curators.map((curator) => (
+                      <SelectItem key={curator.id} value={curator.id.toString()}>
+                        {curator.name} ({curator.email})
+                        {curator.shanyrak && ` - ${curator.shanyrak}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="studentCount">Количество учеников</Label>
                 <Input
                   id="studentCount"
-                  name="studentCount"
+                  name="student_count"
                   type="number"
                   placeholder="0"
-                  value={formData.studentCount?.toString() || "0"}
+                  value={formData.student_count?.toString() || "0"}
                   onChange={handleInputChange}
                 />
               </div>
@@ -473,30 +533,40 @@ export default function ClassManagementPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-curatorName">Имя куратора</Label>
-                <Input
-                  id="edit-curatorName"
-                  name="curatorName"
-                  value={formData.curatorName}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-shanyrak">Шанырак</Label>
-                <Input
-                  id="edit-shanyrak"
-                  name="shanyrak"
-                  value={formData.shanyrak}
-                  onChange={handleInputChange}
-                />
+                <Label htmlFor="edit-curator">Куратор</Label>
+                <Select
+                  value={formData.curator_id?.toString() || ''}
+                  onValueChange={(value) => {
+                    const curatorId = value && value !== 'none' ? parseInt(value) : undefined;
+                    const curator = curators.find(c => c.id === curatorId);
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      curator_id: curatorId,
+                      curator_name: curator?.name
+                    }));
+                  }}
+                >
+                  <SelectTrigger id="edit-curator">
+                    <SelectValue placeholder="Выберите куратора" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Без куратора</SelectItem>
+                    {curators.map((curator) => (
+                      <SelectItem key={curator.id} value={curator.id.toString()}>
+                        {curator.name} ({curator.email})
+                        {curator.shanyrak && ` - ${curator.shanyrak}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="edit-studentCount">Количество учеников</Label>
                 <Input
                   id="edit-studentCount"
-                  name="studentCount"
+                  name="student_count"
                   type="number"
-                  value={formData.studentCount?.toString() || "0"}
+                  value={formData.student_count?.toString() || "0"}
                   onChange={handleInputChange}
                 />
               </div>

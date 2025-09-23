@@ -102,7 +102,7 @@ export default function AppSidebar({
           <SidebarGroup>
             <SidebarGroupLabel>Функционал</SidebarGroupLabel>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {[...navItems, { title: 'Предметы', url: '/dashboard/subjects', icon: 'book' as any }].map((item) => {
                 // Safe icon handling with type checking
                 const iconKey = item.icon;
                 const IconComponent = iconKey && typeof iconKey === 'string' && iconKey in Icons 
@@ -213,10 +213,6 @@ export default function AppSidebar({
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumbs />
-          </div>
-          <div className="flex items-center gap-2 px-4">
-            <ThemeToggle />
-            <UserNav />
           </div>
         </header>
         {/* page main content */}

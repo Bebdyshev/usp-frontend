@@ -159,12 +159,17 @@ export interface ExcelUploadResponse {
 export interface User {
   id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
   type: string;
   company_name?: string;
+  shanyrak?: string;
   is_active: number;
   created_at: string;
   updated_at: string;
+  assigned_grades_count?: number;  // For curators
+  assignment_count?: number;       // For teachers
 }
 
 export interface Subject {
@@ -180,12 +185,21 @@ export interface Grade {
   id: number;
   grade: string;
   parallel: string;
-  curator_name: string;
-  shanyrak?: string;
+  curator_id?: number;
+  curator_name?: string;
   student_count: number;
+  actual_student_count?: number;
   created_at: string;
   updated_at: string;
   user_id: number;
+  curator_info?: {
+    id: number;
+    name: string;
+    first_name?: string;
+    last_name?: string;
+    email: string;
+    shanyrak?: string;
+  };
 }
 
 export interface Student {

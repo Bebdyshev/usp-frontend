@@ -385,6 +385,24 @@ class ApiService {
     }
   }
 
+  async getAvailableCurators(): Promise<import('@/types').User[]> {
+    try {
+      const response = await apiClient.get('/grades/curators');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getUsersByType(userType: string): Promise<import('@/types').User[]> {
+    try {
+      const response = await apiClient.get(`/users/by-type/${userType}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
   async getStudentsByDangerLevel(level: number): Promise<DangerStudentsResponse> {
     try {
       const response: AxiosResponse<DangerStudentsResponse> = await apiClient.get(`/grades/get_students_danger?level=${level}`);
@@ -436,7 +454,13 @@ class ApiService {
 
   async createStudent(studentData: CreateStudentRequest): Promise<Student> {
     try {
-      const response: AxiosResponse<Student> = await apiClient.post('/grades/students/', studentData);
+      // Backend expects body with keys: { student_data: { ... }, grade_id: number }
+      const { grade_id, ...rest } = studentData as any;
+      const payload = {
+        student_data: { ...rest, grade_id },
+        grade_id,
+      };
+      const response: AxiosResponse<Student> = await apiClient.post('/grades/students/', payload);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
