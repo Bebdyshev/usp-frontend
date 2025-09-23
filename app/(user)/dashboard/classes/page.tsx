@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'react-toastify';
 import {
@@ -22,11 +23,12 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Pencil, Trash2, Plus, Users, BarChart3, GraduationCap } from 'lucide-react';
+import { Pencil, Trash2, Plus, Users, BarChart3, GraduationCap, Upload, Settings } from 'lucide-react';
 import api, { Grade as ApiGrade } from '@/lib/api';
 import { ApiError } from '@/utils/errorHandler';
 import StudentManagement from './_components/student-management';
 import AnalyticsOverview from './_components/analytics-overview';
+import { UploadScores } from './_components/upload-scores';
 import { useAvailableClasses } from '@/hooks/use-system-settings';
 
 interface Grade {
@@ -63,6 +65,22 @@ export default function ClassManagementPage() {
     shanyrak: '',
     studentCount: 0
   });
+  const [selectedParallel, setSelectedParallel] = useState<string>('');
+  const [selectedLetter, setSelectedLetter] = useState<string>('');
+
+  const availableLetters = useMemo(() => {
+    if (!selectedParallel) return [] as string[];
+    const lettersSet = new Set<string>();
+    for (const className of availableClasses) {
+      const matchesParallel = className.trim().startsWith(String(selectedParallel));
+      if (!matchesParallel) continue;
+      const letterMatch = className.replace(/^\d+\s*/,'').match(/[A-Za-zА-Яа-яЁё]+/);
+      if (letterMatch && letterMatch[0]) {
+        lettersSet.add(letterMatch[0]);
+      }
+    }
+    return Array.from(lettersSet);
+  }, [availableClasses, selectedParallel]);
 
   useEffect(() => {
     fetchGrades();
@@ -105,6 +123,8 @@ export default function ClassManagementPage() {
       studentCount: 0
     });
     setCurrentGrade(null);
+    setSelectedParallel('');
+    setSelectedLetter('');
   };
 
   const handleCreateGrade = async () => {
@@ -175,8 +195,20 @@ export default function ClassManagementPage() {
   return (
     <PageContainer scrollable>
       <div className="py-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Управление школой</h1>
+        <div className="flex justify-between items-start mb-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <GraduationCap className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Управление школой</h1>
+                <p className="text-muted-foreground">
+                  Управление классами, студентами и аналитикой
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <Tabs defaultValue="classes" className="space-y-6">
@@ -198,9 +230,19 @@ export default function ClassManagementPage() {
           <TabsContent value="classes" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Управление классами</h2>
-              <Button onClick={openCreateDialog} className="flex items-center gap-2">
-                <Plus size={16} /> Добавить класс
-              </Button>
+              <div className="flex items-center gap-2">
+                <UploadScores 
+                  onUploadComplete={fetchGrades}
+                  trigger={
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Upload size={16} /> Загрузить оценки
+                    </Button>
+                  }
+                />
+                <Button onClick={openCreateDialog} className="flex items-center gap-2">
+                  <Plus size={16} /> Добавить класс
+                </Button>
+              </div>
             </div>
 
             {error && (
@@ -308,41 +350,52 @@ export default function ClassManagementPage() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="grade">Класс</Label>
-                  <select
-                    id="grade"
-                    name="grade"
-                    value={formData.grade}
-                    onChange={(e) => {
-                      const selectedClass = e.target.value;
-                      const parallel = selectedClass.match(/^\d+/)?.[0] || '';
-                      setFormData(prev => ({ 
-                        ...prev, 
-                        grade: selectedClass,
-                        parallel: parallel
-                      }));
+                  <Label htmlFor="parallel">Параллель</Label>
+                  <Select
+                    value={selectedParallel}
+                    onValueChange={(value) => {
+                      setSelectedParallel(value);
+                      setSelectedLetter('');
+                      // Keep `grade` as combined view: `${parallel} ${letter}` if letter selected
+                      const combined = value && selectedLetter ? `${value} ${selectedLetter}` : '';
+                      setFormData(prev => ({ ...prev, parallel: value, grade: combined }));
                     }}
-                    className="w-full p-2 border rounded"
                     disabled={classesLoading}
                   >
-                    <option value="">Выберите класс</option>
-                    {availableClasses.map((className) => (
-                      <option key={className} value={className}>
-                        {className}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger id="parallel">
+                      <SelectValue placeholder="Выберите параллель" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableGrades.map((g) => (
+                        <SelectItem key={g.toString()} value={g.toString()}>
+                          {g}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="parallel">Параллель</Label>
-                  <Input
-                    id="parallel"
-                    name="parallel"
-                    value={formData.parallel}
-                    readOnly
-                    className="bg-gray-100"
-                    placeholder="Автоматически"
-                  />
+                  <Label htmlFor="grade">Буква</Label>
+                  <Select
+                    value={selectedLetter}
+                    onValueChange={(letter) => {
+                      setSelectedLetter(letter);
+                      const combined = selectedParallel ? `${selectedParallel} ${letter}` : '';
+                      setFormData(prev => ({ ...prev, grade: combined }));
+                    }}
+                    disabled={!selectedParallel || classesLoading}
+                  >
+                    <SelectTrigger id="grade">
+                      <SelectValue placeholder={selectedParallel ? 'Выберите букву' : 'Сначала выберите параллель'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableLetters.map((letter) => (
+                        <SelectItem key={letter} value={letter}>
+                          {letter}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -360,7 +413,7 @@ export default function ClassManagementPage() {
                 <Input
                   id="shanyrak"
                   name="shanyrak"
-                  placeholder="например, Синий"
+                  placeholder="например, Көшбасшы"
                   value={formData.shanyrak}
                   onChange={handleInputChange}
                 />

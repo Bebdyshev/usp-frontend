@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pencil, Trash2, Plus, Users, Upload, Download } from 'lucide-react';
-import axiosInstance from '@/app/axios/instance';
 import { handleApiError } from '@/utils/errorHandler';
 import api from '@/lib/api';
 
@@ -92,8 +91,8 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
   const fetchStudents = async (gradeId: number) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get(`/grades/students/${gradeId}`);
-      setStudents(response.data);
+      const students = await api.getStudentsByGrade(gradeId);
+      setStudents(students);
     } catch (err) {
       const apiError = handleApiError(err);
       toast.error(`Ошибка загрузки студентов: ${apiError.message}`);
@@ -122,8 +121,9 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
     }
 
     try {
-      await axiosInstance.post('/grades/students/', {
-        ...formData,  // name и email
+      await api.createStudent({
+        name: formData.name,
+        email: formData.email || undefined,
         grade_id: selectedGradeId
       });
       toast.success('Студент успешно добавлен');
@@ -146,7 +146,7 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
     if (!currentStudent) return;
 
     try {
-      await axiosInstance.delete(`/grades/students/${currentStudent.id}`);
+      await api.deleteStudent(currentStudent.id);
       toast.success('Студент успешно удален');
       setIsDeleteDialogOpen(false);
       resetForm();
@@ -162,8 +162,9 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
     if (!selectedGradeId || !selectedGrade) return;
 
     try {
-      await axiosInstance.put(`/grades/${selectedGradeId}/student-count`, {
-        student_count: students.length
+      // Нужно добавить этот метод в API, пока используем прямой вызов
+      await api.updateGrade(selectedGradeId, {
+        studentCount: students.length
       });
       toast.success('Количество студентов обновлено');
       onRefreshGrades();

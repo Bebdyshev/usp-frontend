@@ -3,16 +3,21 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { classData, subjectData } from '@/constants/data';
 import axios from 'axios';
 import PageContainer from '@/components/layout/page-container';
 import { useAuth } from '@/hooks/use-auth';
-import { ArrowRight, Search } from 'lucide-react';
+import { ArrowRight, Search, User, Eye, GraduationCap, AlertTriangle } from 'lucide-react';
 import { StudentPopup } from './studentPopup';
 import FileUploadModal from './sendForm';
 import ClassTable from './classTable';
-import axiosInstance from '@/app/axios/instance';
 import { useAvailableClasses } from '@/hooks/use-system-settings';
+import api from '@/lib/api';
+import type { Student, Grade } from '@/types';
 
 export default function OverViewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,10 +119,10 @@ export default function OverViewPage() {
   const fetchClassData = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/grades/get_class');
+      const response = await api.getAllClassData();
       
-      setStudents(response.data.class_data);
-      setFilteredStudents(response.data.class_data);
+      setStudents(response.class_data || []);
+      setFilteredStudents(response.class_data || []);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         console.log("No classes found. Please check the data source.");
@@ -255,10 +260,9 @@ export default function OverViewPage() {
       applyFilters(selectedGrade, selectedClass, selectedSubject, "Все");
     } else {
       try {
-        const response = await axiosInstance.get(`grades/get_students_danger?level=${selectedDangerLevel}`);
-        const data = response.data;
-          
-        setFilteredStudents(data.filtered_class_data); 
+        const response = await api.getStudentsByDangerLevel(parseInt(selectedDangerLevel));
+        
+        setFilteredStudents(response.filtered_class_data); 
       } catch (error) {
         console.error("Error fetching students:", error);
         alert("An error occurred while fetching students with the selected danger level.");
@@ -342,21 +346,12 @@ export default function OverViewPage() {
       return;
     }
   
-    const formData = new FormData();
-    formData.append("grade", selectedOptionClass);
     const foundClass = classData.find(c => c.class_liter === selectedOptionClass);
     const curatorName = foundClass?.curator || "";
-    formData.append("curator", curatorName);
-    formData.append("subject", "Биология");
-    formData.append("file", file);
   
     try {
-      const response = await axiosInstance.post('/grades/send/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      console.log("File sent successfully:", response.data);
+      const response = await api.uploadGradeFile(selectedOptionClass, curatorName, "Биология", file);
+      console.log("File sent successfully:", response);
       handleModalClose();
     } catch (error) {
       console.error("Error submitting file:", error);

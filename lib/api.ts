@@ -41,11 +41,8 @@ apiClient.interceptors.response.use(
         
         // Redirect to login page
         window.location.href = '/signin';
-        
-        return Promise.reject({
-          ...error,
-          message: 'Your session has expired. Please log in again.'
-        });
+        // Preserve the original AxiosError to avoid losing non-enumerable props
+        return Promise.reject(error);
       }
     }
     
@@ -106,8 +103,11 @@ export interface Student {
 
 export interface CreateStudentRequest {
   name: string;
-  parallel: string;
-  class_name: string;
+  email?: string;
+  student_id_number?: string;
+  phone?: string;
+  parent_contact?: string;
+  grade_id: number;
 }
 
 export interface UpdateStudentRequest {
@@ -146,6 +146,7 @@ export interface UpdateGradeRequest {
   semester?: number;
   parallel?: string;
   class_name?: string;
+  studentCount?: number;
 }
 
 // Dashboard types
@@ -413,6 +414,15 @@ class ApiService {
     }
   }
 
+  async getAllClassData(): Promise<any> {
+    try {
+      const response: AxiosResponse<any> = await apiClient.get('/grades/get_class');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
   // ==================== STUDENTS ====================
   
   async getStudents(): Promise<Student[]> {
@@ -426,7 +436,7 @@ class ApiService {
 
   async createStudent(studentData: CreateStudentRequest): Promise<Student> {
     try {
-      const response: AxiosResponse<Student> = await apiClient.post('/students/', studentData);
+      const response: AxiosResponse<Student> = await apiClient.post('/grades/students/', studentData);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -444,7 +454,16 @@ class ApiService {
 
   async deleteStudent(studentId: number): Promise<void> {
     try {
-      await apiClient.delete(`/students/${studentId}`);
+      await apiClient.delete(`/grades/students/${studentId}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getStudentsByGrade(gradeId: number): Promise<any[]> {
+    try {
+      const response: AxiosResponse<any[]> = await apiClient.get(`/grades/students/${gradeId}`);
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -458,6 +477,26 @@ class ApiService {
       formData.append('file', file);
       
       const response = await apiClient.post(endpoint, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async uploadGradeFile(grade: string, curator: string, subject: string, file: File): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('grade', grade);
+      formData.append('curator', curator);
+      formData.append('subject', subject);
+      formData.append('file', file);
+      
+      const response = await apiClient.post('/grades/send/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -529,6 +568,434 @@ class ApiService {
     try {
       const response: AxiosResponse<AvailableClassesResponse> = await apiClient.get('/settings/available-classes');
       return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+  // ==================== ENHANCED SCHOOL MANAGEMENT ====================
+
+  // Subgroups
+  async getSubgroupsByGrade(gradeId: number): Promise<import('@/types').Subgroup[]> {
+    try {
+      const response = await apiClient.get(`/subgroups/${gradeId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async createSubgroup(subgroupData: import('@/types').CreateSubgroup): Promise<{ id: number; message: string }> {
+    try {
+      const response = await apiClient.post('/subgroups/', subgroupData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async updateSubgroup(subgroupId: number, subgroupData: import('@/types').UpdateSubgroup): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.put(`/subgroups/${subgroupId}`, subgroupData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async deleteSubgroup(subgroupId: number): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.delete(`/subgroups/${subgroupId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getSubgroupStudents(subgroupId: number): Promise<import('@/types').Student[]> {
+    try {
+      const response = await apiClient.get(`/subgroups/${subgroupId}/students`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  // Teacher Assignments
+  async getTeacherAssignments(params?: {
+    grade_id?: number;
+    subject_id?: number;
+    teacher_id?: number;
+    subgroup_id?: number;
+  }): Promise<import('@/types').TeacherAssignment[]> {
+    try {
+      const response = await apiClient.get('/assignments/', { params });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async createTeacherAssignment(assignmentData: import('@/types').CreateTeacherAssignment): Promise<{ id: number; message: string }> {
+    try {
+      const response = await apiClient.post('/assignments/', assignmentData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async updateTeacherAssignment(assignmentId: number, assignmentData: import('@/types').UpdateTeacherAssignment): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.put(`/assignments/${assignmentId}`, assignmentData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async deleteTeacherAssignment(assignmentId: number): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.delete(`/assignments/${assignmentId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getAvailableTeachers(): Promise<import('@/types').User[]> {
+    try {
+      const response = await apiClient.get('/assignments/teachers');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getAssignmentsByGrade(gradeId: number): Promise<import('@/types').TeacherAssignment[]> {
+    try {
+      const response = await apiClient.get(`/assignments/by-grade/${gradeId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  // Curator Management
+  async getCuratorAssignments(): Promise<import('@/types').CuratorAssignment[]> {
+    try {
+      const response = await apiClient.get('/curators/');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async createCuratorAssignment(assignmentData: import('@/types').CreateCuratorAssignment): Promise<{ id: number; message: string }> {
+    try {
+      const response = await apiClient.post('/curators/', assignmentData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async deleteCuratorAssignment(assignmentId: number): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.delete(`/curators/${assignmentId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getAvailableCurators(): Promise<import('@/types').User[]> {
+    try {
+      const response = await apiClient.get('/curators/available');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getGradesByCurator(curatorId: number): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`/curators/by-curator/${curatorId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getCuratorByGrade(gradeId: number): Promise<any> {
+    try {
+      const response = await apiClient.get(`/curators/by-grade/${gradeId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  // Disciplinary Actions
+  async getDisciplinaryActions(params?: {
+    student_id?: number;
+    severity_level?: number;
+    is_resolved?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<import('@/types').DisciplinaryAction[]> {
+    try {
+      const response = await apiClient.get('/discipline/', { params });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async createDisciplinaryAction(actionData: import('@/types').CreateDisciplinaryAction): Promise<{ id: number; message: string }> {
+    try {
+      const response = await apiClient.post('/discipline/', actionData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async updateDisciplinaryAction(actionId: number, actionData: import('@/types').UpdateDisciplinaryAction): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.put(`/discipline/${actionId}`, actionData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async deleteDisciplinaryAction(actionId: number): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.delete(`/discipline/${actionId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getStudentDisciplinaryActions(studentId: number): Promise<import('@/types').DisciplinaryAction[]> {
+    try {
+      const response = await apiClient.get(`/discipline/student/${studentId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getDisciplineStatistics(gradeId?: number): Promise<import('@/types').DisciplineStatistics> {
+    try {
+      const params = gradeId ? { grade_id: gradeId } : {};
+      const response = await apiClient.get('/discipline/statistics', { params });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  // Achievements
+  async getAchievements(params?: {
+    student_id?: number;
+    category?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<import('@/types').Achievement[]> {
+    try {
+      const response = await apiClient.get('/achievements/', { params });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async createAchievement(achievementData: import('@/types').CreateAchievement): Promise<{ id: number; message: string }> {
+    try {
+      const response = await apiClient.post('/achievements/', achievementData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async updateAchievement(achievementId: number, achievementData: import('@/types').UpdateAchievement): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.put(`/achievements/${achievementId}`, achievementData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async deleteAchievement(achievementId: number): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.delete(`/achievements/${achievementId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getStudentAchievements(studentId: number): Promise<import('@/types').Achievement[]> {
+    try {
+      const response = await apiClient.get(`/achievements/student/${studentId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getAchievementCategories(): Promise<string[]> {
+    try {
+      const response = await apiClient.get('/achievements/categories');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getAchievementStatistics(gradeId?: number): Promise<import('@/types').AchievementStatistics> {
+    try {
+      const params = gradeId ? { grade_id: gradeId } : {};
+      const response = await apiClient.get('/achievements/statistics', { params });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  // Subjects (Enhanced)
+  async getAllSubjects(): Promise<import('@/types').Subject[]> {
+    try {
+      const response = await apiClient.get('/subjects/');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async createSubject(subjectData: { name: string; description?: string }): Promise<{ id: number; message: string }> {
+    try {
+      const response = await apiClient.post('/subjects/', subjectData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async updateSubject(subjectId: number, subjectData: { name?: string; description?: string; is_active?: number }): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.put(`/subjects/${subjectId}`, subjectData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async deleteSubject(subjectId: number): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.delete(`/subjects/${subjectId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  // Excel Upload (Enhanced)
+  async uploadScores(uploadData: {
+    grade_id: number;
+    subject_id: number;
+    teacher_name: string;
+    semester?: number;
+    subgroup_id?: number;
+    file: File;
+  }): Promise<import('@/types').ExcelUploadResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('grade_id', uploadData.grade_id.toString());
+      formData.append('subject_id', uploadData.subject_id.toString());
+      formData.append('teacher_name', uploadData.teacher_name);
+      if (uploadData.semester) {
+        formData.append('semester', uploadData.semester.toString());
+      }
+      if (uploadData.subgroup_id) {
+        formData.append('subgroup_id', uploadData.subgroup_id.toString());
+      }
+      formData.append('file', uploadData.file);
+
+      const response = await apiClient.post('/grades/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async downloadExcelTemplate(): Promise<Blob> {
+    try {
+      const response = await apiClient.get('/grades/template', {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  // Student Profile
+  async getStudentProfile(studentId: number): Promise<import('@/types').StudentProfile> {
+    try {
+      // Get student basic info
+      const studentResponse = await apiClient.get(`/students/${studentId}`);
+      const student = studentResponse.data;
+
+      // Get student scores
+      const scoresResponse = await apiClient.get(`/grades/student/${studentId}`);
+      const scores = scoresResponse.data;
+
+      // Get disciplinary actions
+      const disciplinaryActions = await this.getStudentDisciplinaryActions(studentId);
+
+      // Get achievements
+      const achievements = await this.getStudentAchievements(studentId);
+
+      // Get grade info if available
+      let gradeInfo = null;
+      if (student.grade_id) {
+        try {
+          const gradeResponse = await apiClient.get(`/grades/${student.grade_id}`);
+          gradeInfo = gradeResponse.data;
+        } catch (error) {
+          // Grade info is optional
+        }
+      }
+
+      // Get subgroup info if available
+      let subgroupInfo = null;
+      if (student.subgroup_id) {
+        try {
+          const subgroupResponse = await apiClient.get(`/subgroups/${student.subgroup_id}`);
+          subgroupInfo = subgroupResponse.data;
+        } catch (error) {
+          // Subgroup info is optional
+        }
+      }
+
+      return {
+        ...student,
+        scores,
+        disciplinary_actions: disciplinaryActions,
+        achievements,
+        grade_info: gradeInfo,
+        subgroup_info: subgroupInfo,
+      };
     } catch (error) {
       throw handleApiError(error);
     }

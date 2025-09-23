@@ -9,7 +9,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'react-toastify';
-import { Settings, Save, RefreshCw, Plus, X } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  Settings, 
+  Save, 
+  RefreshCw, 
+  Plus, 
+  X, 
+  School, 
+  Calendar,
+  Users,
+  BookOpen,
+  GraduationCap,
+  AlertCircle,
+  Check,
+  Trash2
+} from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSystemSettings } from '@/hooks/use-system-settings';
 import api from '@/lib/api';
@@ -176,181 +193,312 @@ export default function SystemSettingsPage() {
 
   return (
     <PageContainer scrollable>
-      <div className="py-4 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Settings className="h-6 w-6" />
-              Системные настройки
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Управление конфигурацией школьной системы
-            </p>
+      <div className="py-6 space-y-8">
+        {/* Header */}
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Settings className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Системные настройки</h1>
+                <p className="text-muted-foreground">
+                  Управление конфигурацией школьной системы
+                </p>
+              </div>
+            </div>
           </div>
-          <Button onClick={() => refreshSettings()} variant="outline">
+          <Button onClick={() => refreshSettings()} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Обновить
           </Button>
         </div>
 
         {error && (
-          <Card className="border-red-300 bg-red-50">
-            <CardContent className="p-4 text-red-600">
-              {error}
-            </CardContent>
-          </Card>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Basic Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Основные настройки</CardTitle>
-              <CardDescription>
-                Общие параметры школьной системы
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="min_grade">Минимальный класс</Label>
-                  <Input
-                    id="min_grade"
-                    name="min_grade"
-                    type="number"
-                    min="1"
-                    max="12"
-                    value={formData.min_grade}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="max_grade">Максимальный класс</Label>
-                  <Input
-                    id="max_grade"
-                    name="max_grade"
-                    type="number"
-                    min="1"
-                    max="12"
-                    value={formData.max_grade}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="school_name">Название школы</Label>
-                <Input
-                  id="school_name"
-                  name="school_name"
-                  value={formData.school_name}
-                  onChange={handleInputChange}
-                  placeholder="Введите название школы"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="academic_year">Учебный год</Label>
-                <Input
-                  id="academic_year"
-                  name="academic_year"
-                  value={formData.academic_year}
-                  onChange={handleInputChange}
-                  placeholder="2024-2025"
-                />
-              </div>
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="general" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="general" className="flex items-center gap-2">
+              <School className="h-4 w-4" />
+              Основные
+            </TabsTrigger>
+            <TabsTrigger value="classes" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Классы
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Предварительный просмотр
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Class Letters */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Буквы классов</CardTitle>
-              <CardDescription>
-                Управление буквенными обозначениями классов
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {formData.class_letters.map((letter) => (
-                  <Badge 
-                    key={letter} 
-                    variant="secondary" 
-                    className="flex items-center gap-1"
-                  >
-                    {letter}
-                    <button
-                      onClick={() => removeClassLetter(letter)}
-                      className="ml-1 hover:bg-red-200 rounded-full p-0.5"
-                      disabled={formData.class_letters.length <= 1}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-              
-              <div className="flex gap-2">
-                <Input
-                  value={newLetter}
-                  onChange={(e) => setNewLetter(e.target.value.toUpperCase())}
-                  placeholder="Новая буква (A-Z)"
-                  maxLength={1}
-                  className="flex-1"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      addClassLetter();
-                    }
-                  }}
-                />
-                <Button onClick={addClassLetter} size="sm">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+          {/* General Settings Tab */}
+          <TabsContent value="general" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <School className="h-5 w-5" />
+                    Информация о школе
+                  </CardTitle>
+                  <CardDescription>
+                    Основные параметры учебного заведения
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="school_name">Название школы</Label>
+                    <Input
+                      id="school_name"
+                      name="school_name"
+                      value={formData.school_name}
+                      onChange={handleInputChange}
+                      placeholder="Введите название школы"
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="academic_year" className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Учебный год
+                    </Label>
+                    <Input
+                      id="academic_year"
+                      name="academic_year"
+                      value={formData.academic_year}
+                      onChange={handleInputChange}
+                      placeholder="2024-2025"
+                      className="mt-1"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-        {/* Preview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Предварительный просмотр</CardTitle>
-            <CardDescription>
-              Классы, которые будут доступны в системе
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-sm text-gray-600">
-                Всего классов: <strong>{calculateTotalClasses()}</strong>
-              </div>
-              
-              <div className="grid gap-2">
-                {Array.from({ length: formData.max_grade - formData.min_grade + 1 }, (_, i) => {
-                  const grade = formData.min_grade + i;
-                  return (
-                    <div key={grade} className="flex items-center gap-2">
-                      <span className="font-medium w-8">{grade}:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {formData.class_letters.map((letter) => (
-                          <Badge key={`${grade}${letter}`} variant="outline" className="text-xs">
-                            {grade}{letter}
-                          </Badge>
-                        ))}
-                      </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Диапазон классов
+                  </CardTitle>
+                  <CardDescription>
+                    Настройка параллелей в школе
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="min_grade">Минимальный класс</Label>
+                      <Input
+                        id="min_grade"
+                        name="min_grade"
+                        type="number"
+                        min="1"
+                        max="12"
+                        value={formData.min_grade}
+                        onChange={handleInputChange}
+                        className="mt-1"
+                      />
                     </div>
-                  );
-                })}
-              </div>
+                    <div>
+                      <Label htmlFor="max_grade">Максимальный класс</Label>
+                      <Input
+                        id="max_grade"
+                        name="max_grade"
+                        type="number"
+                        min="1"
+                        max="12"
+                        value={formData.max_grade}
+                        onChange={handleInputChange}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Будут созданы классы с {formData.min_grade} по {formData.max_grade} параллель
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+          </TabsContent>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-4">
+          {/* Classes Management Tab */}
+          <TabsContent value="classes" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Управление буквами классов
+                </CardTitle>
+                <CardDescription>
+                  Добавляйте и удаляйте буквенные обозначения классов
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Current Letters */}
+                <div className="space-y-3">
+                  <Label>Текущие буквы классов</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.class_letters.map((letter) => (
+                      <Badge 
+                        key={letter} 
+                        variant="secondary" 
+                        className="flex items-center gap-2 px-3 py-1"
+                      >
+                        <span className="font-medium">{letter}</span>
+                        <button
+                          onClick={() => removeClassLetter(letter)}
+                          className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+                          disabled={formData.class_letters.length <= 1}
+                          title={formData.class_letters.length <= 1 ? "Должна остаться хотя бы одна буква" : "Удалить букву"}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                {/* Add New Letter */}
+                <div className="space-y-3">
+                  <Label>Добавить новую букву</Label>
+                  <div className="flex gap-3">
+                    <Input
+                      value={newLetter}
+                      onChange={(e) => setNewLetter(e.target.value.toUpperCase())}
+                      placeholder="A-Z"
+                      maxLength={1}
+                      className="w-20 text-center font-medium"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          addClassLetter();
+                        }
+                      }}
+                    />
+                    <Button onClick={addClassLetter} disabled={!newLetter.trim()}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить букву
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Введите букву от A до Z для создания новых классов
+                  </p>
+                </div>
+
+                {/* Quick Add Common Letters */}
+                <div className="space-y-3">
+                  <Label>Быстрое добавление</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'].map((letter) => (
+                      <Button
+                        key={letter}
+                        variant={formData.class_letters.includes(letter) ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          if (!formData.class_letters.includes(letter)) {
+                            setFormData(prev => ({
+                              ...prev,
+                              class_letters: [...prev.class_letters, letter].sort()
+                            }));
+                          }
+                        }}
+                        disabled={formData.class_letters.includes(letter)}
+                        className="w-10 h-10"
+                      >
+                        {formData.class_letters.includes(letter) ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          letter
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Preview Tab */}
+          <TabsContent value="preview" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Предварительный просмотр классов
+                </CardTitle>
+                <CardDescription>
+                  Все классы, которые будут доступны в системе
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Summary */}
+                  <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{calculateTotalClasses()}</div>
+                      <div className="text-sm text-muted-foreground">Всего классов</div>
+                    </div>
+                    <Separator orientation="vertical" className="h-12" />
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{formData.max_grade - formData.min_grade + 1}</div>
+                      <div className="text-sm text-muted-foreground">Параллелей</div>
+                    </div>
+                    <Separator orientation="vertical" className="h-12" />
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{formData.class_letters.length}</div>
+                      <div className="text-sm text-muted-foreground">Букв классов</div>
+                    </div>
+                  </div>
+                  
+                  {/* Classes Grid */}
+                  <div className="space-y-4">
+                    {Array.from({ length: formData.max_grade - formData.min_grade + 1 }, (_, i) => {
+                      const grade = formData.min_grade + i;
+                      return (
+                        <div key={grade} className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-medium">
+                              {grade} параллель
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              {formData.class_letters.length} {formData.class_letters.length === 1 ? 'класс' : 'классов'}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2 pl-4">
+                            {formData.class_letters.map((letter) => (
+                              <Badge key={`${grade}${letter}`} variant="secondary" className="text-sm">
+                                {grade}{letter}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Save Button */}
+        <div className="flex justify-end gap-4 pt-4 border-t">
           <Button 
             onClick={handleSave} 
             disabled={saving}
+            size="lg"
             className="flex items-center gap-2"
           >
             {saving ? (
@@ -358,7 +506,7 @@ export default function SystemSettingsPage() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {saving ? 'Сохранение...' : 'Сохранить настройки'}
+            {saving ? 'Сохранение...' : 'Сохранить все настройки'}
           </Button>
         </div>
       </div>

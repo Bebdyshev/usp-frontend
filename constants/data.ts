@@ -124,17 +124,38 @@ export type Product = {
 export const navItems: NavItem[] = [
   {
     title: 'Панель управления',
-    url: '/d/dashboard',
+    url: '/dashboard',
     icon: 'dashboard',
     isActive: false,
     items: [] // Empty array as there are no child items for Dashboard
   },
   {
     title: 'Студенты',
-    url: '/d/students',
+    url: '/dashboard/students',
     icon: 'users',
     isActive: false,
     items: [] // Empty array as there are no child items for Dashboard
+  },
+  {
+    title: 'Управление школой',
+    url: '/dashboard/classes',
+    icon: 'graduationCap',
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Пользователи',
+    url: '/dashboard/users',
+    icon: 'userCheck',
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Настройки системы',
+    url: '/settings',
+    icon: 'settings',
+    isActive: false,
+    items: []
   },
 
 ];

@@ -33,7 +33,9 @@ import {
   Users,
   BookText,
   Mail,
-  X
+  X,
+  GraduationCap,
+  UserCheck
 } from 'lucide-react';
 export type Icon = LucideIcon;
 
@@ -69,6 +71,8 @@ export const Icons = {
   users: Users,
   forms: BookText,
   mail: Mail,
+  graduationCap: GraduationCap,
+  userCheck: UserCheck,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
