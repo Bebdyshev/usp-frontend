@@ -27,6 +27,7 @@ import api, { Grade as ApiGrade } from '@/lib/api';
 import { ApiError } from '@/utils/errorHandler';
 import StudentManagement from './_components/student-management';
 import AnalyticsOverview from './_components/analytics-overview';
+import { useAvailableClasses } from '@/hooks/use-system-settings';
 
 interface Grade {
   id: number;
@@ -50,6 +51,7 @@ export default function ClassManagementPage() {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { classes: availableClasses, grades: availableGrades, loading: classesLoading } = useAvailableClasses();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -307,22 +309,39 @@ export default function ClassManagementPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="grade">Класс</Label>
-                  <Input
+                  <select
                     id="grade"
                     name="grade"
-                    placeholder="например, 9А"
                     value={formData.grade}
-                    onChange={handleInputChange}
-                  />
+                    onChange={(e) => {
+                      const selectedClass = e.target.value;
+                      const parallel = selectedClass.match(/^\d+/)?.[0] || '';
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        grade: selectedClass,
+                        parallel: parallel
+                      }));
+                    }}
+                    className="w-full p-2 border rounded"
+                    disabled={classesLoading}
+                  >
+                    <option value="">Выберите класс</option>
+                    {availableClasses.map((className) => (
+                      <option key={className} value={className}>
+                        {className}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="parallel">Параллель</Label>
                   <Input
                     id="parallel"
                     name="parallel"
-                    placeholder="например, 9"
                     value={formData.parallel}
-                    onChange={handleInputChange}
+                    readOnly
+                    className="bg-gray-100"
+                    placeholder="Автоматически"
                   />
                 </div>
               </div>

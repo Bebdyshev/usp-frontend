@@ -189,6 +189,40 @@ export interface ClassData {
   students: Student[];
 }
 
+// System Settings types
+export interface SystemSettings {
+  id: number;
+  min_grade: number;
+  max_grade: number;
+  class_letters: string[];
+  school_name?: string;
+  academic_year: string;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSystemSettingsRequest {
+  min_grade?: number;
+  max_grade?: number;
+  class_letters?: string[];
+  school_name?: string;
+  academic_year?: string;
+}
+
+export interface UpdateSystemSettingsRequest {
+  min_grade?: number;
+  max_grade?: number;
+  class_letters?: string[];
+  school_name?: string;
+  academic_year?: string;
+}
+
+export interface AvailableClassesResponse {
+  classes: string[];
+  grades: number[];
+}
+
 // ==================== API SERVICE CLASS ====================
 
 class ApiService {
@@ -457,6 +491,44 @@ class ApiService {
       });
 
       return await Promise.all(promises);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  // ==================== SYSTEM SETTINGS ====================
+  
+  async getSystemSettings(): Promise<SystemSettings> {
+    try {
+      const response: AxiosResponse<SystemSettings> = await apiClient.get('/settings/');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async updateSystemSettings(settingsData: UpdateSystemSettingsRequest): Promise<SystemSettings> {
+    try {
+      const response: AxiosResponse<SystemSettings> = await apiClient.put('/settings/', settingsData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async createSystemSettings(settingsData: CreateSystemSettingsRequest): Promise<any> {
+    try {
+      const response = await apiClient.post('/settings/', settingsData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  async getAvailableClasses(): Promise<AvailableClassesResponse> {
+    try {
+      const response: AxiosResponse<AvailableClassesResponse> = await apiClient.get('/settings/available-classes');
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }

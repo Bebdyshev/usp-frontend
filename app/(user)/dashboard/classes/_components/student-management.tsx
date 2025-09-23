@@ -25,6 +25,7 @@ import {
 import { Pencil, Trash2, Plus, Users, Upload, Download } from 'lucide-react';
 import axiosInstance from '@/app/axios/instance';
 import { handleApiError } from '@/utils/errorHandler';
+import api from '@/lib/api';
 
 interface Student {
   id: number;
@@ -51,13 +52,16 @@ interface StudentManagementProps {
 export default function StudentManagement({ grades, onRefreshGrades }: StudentManagementProps) {
   const [selectedGradeId, setSelectedGradeId] = useState<number | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
+  const [subjects, setSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    email: ''
+    email: '',
+    subject: ''
   });
 
   const selectedGrade = grades.find(g => g.id === selectedGradeId);
@@ -67,6 +71,23 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
       fetchStudents(selectedGradeId);
     }
   }, [selectedGradeId]);
+
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  const fetchSubjects = async () => {
+    setSubjectsLoading(true);
+    try {
+      const subjectsList = await api.getSubjects();
+      setSubjects(subjectsList);
+    } catch (err) {
+      const apiError = handleApiError(err);
+      toast.error(`Ошибка загрузки предметов: ${apiError.message}`);
+    } finally {
+      setSubjectsLoading(false);
+    }
+  };
 
   const fetchStudents = async (gradeId: number) => {
     setLoading(true);
@@ -87,7 +108,7 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
   };
 
   const resetForm = () => {
-    setFormData({ name: '', email: '' });
+    setFormData({ name: '', email: '', subject: '' });
     setCurrentStudent(null);
   };
 
@@ -331,6 +352,26 @@ export default function StudentManagement({ grades, onRefreshGrades }: StudentMa
                 value={formData.email}
                 onChange={handleInputChange}
               />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="student-subject">Предмет (необязательно)</Label>
+              <Select 
+                value={formData.subject} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}
+                disabled={subjectsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={subjectsLoading ? "Загрузка..." : "Выберите предмет"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Без предмета</SelectItem>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject} value={subject}>
+                      {subject}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

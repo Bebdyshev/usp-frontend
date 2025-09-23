@@ -12,12 +12,13 @@ import { StudentPopup } from './studentPopup';
 import FileUploadModal from './sendForm';
 import ClassTable from './classTable';
 import axiosInstance from '@/app/axios/instance';
+import { useAvailableClasses } from '@/hooks/use-system-settings';
 
 export default function OverViewPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState("Все");
   const [selectedGrade, setSelectedGrade] = useState("Все");
-  const [selectedOptionClass, setSelectedOptionClass] = useState("9A")
+  const [selectedOptionClass, setSelectedOptionClass] = useState("7A")
   const [students, setStudents] = useState<any[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,6 +33,9 @@ export default function OverViewPage() {
   const [selectedSubject, setSelectedSubject] = useState("Все");
   const [selectedDangerLevel, setSelectedDangerLevel] = useState("Все");
   const [noClassses, setNoClassses] = useState(false);
+  
+  // Use dynamic classes from system settings
+  const { classes: systemClasses, grades: systemGrades, loading: classesLoading } = useAvailableClasses();
   const [availableClasses, setAvailableClasses] = useState<string[]>([]);
   const [gradeClasses, setGradeClasses] = useState<{[grade: string]: string[]}>({});
   
@@ -62,29 +66,40 @@ export default function OverViewPage() {
     }
   }, [authLoading, isAuthenticated, router]);
   
+  // Update available classes from system settings
   useEffect(() => {
-    // Extract unique class names from the data
-    if (students && students.length > 0) {
-      const classNames = students.map(item => item.grade_liter);
-      const uniqueClasses = Array.from(new Set(classNames));
-      setAvailableClasses(uniqueClasses);
+    if (!classesLoading && systemClasses.length > 0) {
+      setAvailableClasses(systemClasses);
       
-      // Group classes by grade
+      // Group classes by grade using system grades
       const groupedClasses: {[grade: string]: string[]} = {};
-      uniqueClasses.forEach(className => {
-        // Extract the grade number (e.g., "9A" -> "9")
-        const grade = className.match(/^\d+/)?.[0] || '';
-        if (grade) {
-          if (!groupedClasses[grade]) {
-            groupedClasses[grade] = [];
-          }
-          groupedClasses[grade].push(className);
-        }
+      systemGrades.forEach(grade => {
+        const gradeStr = grade.toString();
+        groupedClasses[gradeStr] = systemClasses.filter(className => 
+          className.startsWith(gradeStr)
+        );
       });
       
       setGradeClasses(groupedClasses);
+      
+      // Update selected class if it doesn't exist in new system
+      if (selectedOptionClass && !systemClasses.includes(selectedOptionClass)) {
+        setSelectedOptionClass(systemClasses[0] || "7A");
+      }
     }
-  }, [students]);
+  }, [systemClasses, systemGrades, classesLoading, selectedOptionClass]);
+
+  useEffect(() => {
+    // Also extract classes from actual student data for compatibility
+    if (students && students.length > 0) {
+      const classNames = students.map(item => item.grade_liter);
+      const uniqueClasses = Array.from(new Set(classNames));
+      
+      // Merge with system classes
+      const mergedClasses = Array.from(new Set([...systemClasses, ...uniqueClasses]));
+      setAvailableClasses(mergedClasses);
+    }
+  }, [students, systemClasses]);
   
   useEffect(() => {
     if (selectedGrade !== "Все") {
@@ -357,8 +372,10 @@ export default function OverViewPage() {
     return <div>Loading...</div>;
   }
 
-  // Get unique grade numbers
-  const gradeNumbers = Object.keys(gradeClasses).sort((a, b) => parseInt(a) - parseInt(b));
+  // Get unique grade numbers - use system grades if available, otherwise extract from data
+  const gradeNumbers = systemGrades.length > 0 
+    ? systemGrades.map(g => g.toString()).sort((a, b) => parseInt(a) - parseInt(b))
+    : Object.keys(gradeClasses).sort((a, b) => parseInt(a) - parseInt(b));
 
   return (
     <PageContainer scrollable>
