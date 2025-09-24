@@ -4,21 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import api from '@/lib/api';
-
-interface Student {
-  id: number;
-  name: string;
-  danger_level: number;
-  attendance: number;
-  grades: Record<string, number>;
-}
-
-interface ClassData {
-  class_name: string;
-  avg_danger_level: number;
-  students: Student[];
-}
+import api, { ClassData, Student } from '@/lib/api';
 
 export default function ClassPage() {
   const searchParams = useSearchParams();
@@ -120,28 +106,23 @@ export default function ClassPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {classData.students.map((student, index) => {
-                    const avgGrade = Object.values(student.grades).reduce((sum, grade) => sum + grade, 0) / 
-                                    (Object.values(student.grades).length || 1);
-                    
-                    return (
-                      <tr key={student.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 border">{index + 1}</td>
-                        <td className="px-4 py-2 border">{student.name}</td>
-                        <td className="px-4 py-2 border text-center">
-                          <span className={getDangerLevelColor(student.danger_level)}>
-                            {student.danger_level.toFixed(2)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 border text-center">
-                          {student.attendance}%
-                        </td>
-                        <td className="px-4 py-2 border text-center">
-                          {avgGrade.toFixed(2)}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {classData.students.map((student, index) => (
+                    <tr key={student.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border">{index + 1}</td>
+                      <td className="px-4 py-2 border">{student.name}</td>
+                      <td className="px-4 py-2 border text-center">
+                        <span className={getDangerLevelColor(student.danger_level || 0)}>
+                          {(student.danger_level || 0).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 border text-center">
+                        N/A
+                      </td>
+                      <td className="px-4 py-2 border text-center">
+                        {(student.average_grade || 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

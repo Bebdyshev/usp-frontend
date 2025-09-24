@@ -19,8 +19,8 @@ export default function DashBoardPage() {
     level2: 0,
     level1: 0
   });
-  const [dangerousClasses, setDangerousClasses] = useState([]);
-  const [classDangerPercentages, setClassDangerPercentages] = useState([]);
+  const [dangerousClasses, setDangerousClasses] = useState<any[]>([]);
+  const [classDangerPercentages, setClassDangerPercentages] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {

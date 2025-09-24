@@ -58,7 +58,7 @@ export default function AppSidebar({
 }: {
   children: React.ReactNode;
 }) {
-  const [userInfo, setUserInfo] = useState<{ company_name: string; name: string }>({"company_name": "Freedom", "name": "Berdyshev Kerey"});
+  const [userInfo, setUserInfo] = useState<{ company_name?: string; name: string }>({"company_name": "Freedom", "name": "Berdyshev Kerey"});
 
   useEffect(() => {
     async function fetchUserInfo() {
@@ -109,7 +109,7 @@ export default function AppSidebar({
                   ? Icons[iconKey as keyof typeof Icons] 
                   : Icons.logo;
                 
-                return item?.items && item?.items?.length > 0 ? (
+                return (item as any)?.items && (item as any)?.items?.length > 0 ? (
                   <Collapsible
                     key={item.title}
                     asChild
@@ -129,7 +129,7 @@ export default function AppSidebar({
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {item.items?.map((subItem: {title: string; url: string}) => (
+                          {(item as any).items?.map((subItem: {title: string; url: string}) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton
                                 asChild

@@ -187,6 +187,7 @@ export interface AnalyticsData {
 export interface ClassData {
   class_name: string;
   parallel: string;
+  avg_danger_level: number;
   students: Student[];
 }
 
@@ -385,14 +386,6 @@ class ApiService {
     }
   }
 
-  async getAvailableCurators(): Promise<import('@/types').User[]> {
-    try {
-      const response = await apiClient.get('/grades/curators');
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  }
 
   async getUsersByType(userType: string): Promise<import('@/types').User[]> {
     try {

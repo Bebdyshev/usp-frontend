@@ -19,7 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CalendarIcon, CheckCircleIcon, AlertCircleIcon, Clock } from 'lucide-react';
-import axiosInstance from '@/app/axios/instance';
+import api from '@/lib/api';
 
 interface StudentPopupProps {
   studentData: Student;
@@ -83,7 +83,7 @@ export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose
         // In a real app, this would be an API call
         console.log(`Marking comment as read for ${userRole}`);
         // Example placeholder for API call:
-        // await axiosInstance.post('/comments/mark-read', {
+        // await api.markCommentAsRead({
         //   studentId: studentData.id,
         //   reader: userRole
         // });
@@ -126,7 +126,7 @@ export const StudentPopup: React.FC<StudentPopupProps> = ({ studentData, onClose
       // Comment out the API call to avoid errors if endpoint doesn't exist
       /*
       try {
-        await axiosInstance.post('/students/update-feedback', updatedStudentData);
+        await api.updateStudentFeedback(updatedStudentData);
       } catch (error) {
         console.error("API error when saving feedback:", error);
         // Continue with local update even if API fails
