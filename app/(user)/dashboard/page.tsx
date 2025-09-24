@@ -19,10 +19,6 @@ import Link from 'next/link';
 import { useSystemSettings } from '@/hooks/use-system-settings';
 import api from '@/lib/api';
 
-export const metadata = {
-  title: 'Dashboard : Overview'
-};
-
 export default function DashboardPage() {
   const { settings, loading: settingsLoading } = useSystemSettings();
   const [stats, setStats] = useState({

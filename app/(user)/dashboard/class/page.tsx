@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import axiosInstance from '@/app/axios/instance';
+import api from '@/lib/api';
 
 interface Student {
   id: number;
@@ -37,8 +37,10 @@ export default function ClassPage() {
       console.log(`/classes/class/${classParam}`);
       try {
         setLoading(true);
-        const response = await axiosInstance.get(`/classes/class/${classParam}`);
-        setClassData(response.data);
+        // Parse classParam to get parallel and class name
+        const [parallel, className] = classParam.split(' ');
+        const response = await api.getClassData(parallel, className);
+        setClassData(response);
         setError(null);
       } catch (err) {
         console.error('Error fetching class data:', err);
