@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSystemSettings } from '@/hooks/use-system-settings';
+import SystemSettingsDialog from '@/components/SystemSettingsDialog';
 import api from '@/lib/api';
 
 export default function DashboardPage() {
@@ -28,6 +29,7 @@ export default function DashboardPage() {
     dangerousStudents: 0
   });
   const [loading, setLoading] = useState(true);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -165,12 +167,14 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <Link href="/settings">
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Настроить
-                  </Button>
-                </Link>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSettingsDialogOpen(true)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Настроить
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -257,6 +261,12 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* System Settings Dialog */}
+      <SystemSettingsDialog 
+        open={settingsDialogOpen} 
+        onOpenChange={setSettingsDialogOpen} 
+      />
     </PageContainer>
     );
 }
